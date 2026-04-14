@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Inversion Brief — Inveritas Blog</title>
+<meta name="description" content="Legal defense insights, statutory inversion breakdowns, and defense strategy analysis from the team at Inveritas.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--navy-deep:#060E1A;--navy:#0A1628;--navy-mid:#0F2140;--navy-light:#1A3158;--gold:#D4A843;--gold-light:#E8C76A;--gold-dark:#B8912E;--gold-muted:rgba(212,168,67,0.15);--white:#F2F0ED;--white-pure:#FFF;--gray:#8A99AB;--gray-light:#C5CDD8;--red:#E85D5D;--green:#5DE8A0;--blue:#64B4FF;--font-display:'Cormorant Garamond',Georgia,serif;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace}
+html{scroll-behavior:smooth}
+body{background:var(--navy-deep);color:var(--white);font-family:var(--font-body);font-weight:400;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:rgba(6,14,26,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,168,67,0.08)}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:.75rem;text-decoration:none}
+.nav-logo-text{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--white);letter-spacing:.08em}
+.nav-links{display:flex;align-items:center;gap:2rem;list-style:none}
+.nav-links a{color:var(--gray);text-decoration:none;font-size:.85rem;font-weight:500;letter-spacing:.04em;transition:color .3s}
+.nav-links a:hover{color:var(--gold)}
+.nav-links a.active{color:var(--gold)}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.7rem 1.5rem;font-family:var(--font-body);font-size:.85rem;font-weight:600;letter-spacing:.04em;text-decoration:none;border-radius:3px;border:none;cursor:pointer;transition:all .3s}
+.btn-gold{background:var(--gold);color:var(--navy-deep)}
+.btn-gold:hover{background:var(--gold-light)}
+
+.container{max-width:800px;margin:0 auto;padding:0 2rem}
+.page-wrap{padding-top:5rem;min-height:100vh;padding-bottom:4rem}
+
+/* Blog Header */
+.blog-header{padding:3rem 0 2rem;text-align:center;border-bottom:1px solid rgba(212,168,67,.08);margin-bottom:3rem}
+.blog-header h1{font-family:var(--font-display);font-size:2.5rem;font-weight:600;color:var(--white-pure);margin-bottom:.5rem}
+.blog-header .subtitle{font-size:1rem;color:var(--gray);max-width:500px;margin:0 auto}
+
+/* Post List */
+.post-card{padding:2rem 0;border-bottom:1px solid rgba(212,168,67,.05)}
+.post-card:first-child{padding-top:0}
+.post-card a{text-decoration:none}
+.post-card-date{font-size:.75rem;color:var(--gold);font-weight:600;letter-spacing:.08em;margin-bottom:.5rem}
+.post-card-title{font-family:var(--font-display);font-size:1.6rem;font-weight:600;color:var(--white-pure);line-height:1.3;margin-bottom:.5rem;transition:color .3s}
+.post-card:hover .post-card-title{color:var(--gold)}
+.post-card-excerpt{font-size:.9rem;color:var(--gray);line-height:1.7;margin-bottom:.75rem}
+.post-card-meta{display:flex;gap:1.5rem;font-size:.75rem;color:var(--gray)}
+.post-card-tags{display:flex;gap:.4rem;flex-wrap:wrap}
+.tag{font-size:.65rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .5rem;border-radius:2px;background:rgba(212,168,67,.08);color:var(--gold-dark)}
+
+/* Single Post */
+.post-header{margin-bottom:2.5rem}
+.post-back{font-size:.85rem;color:var(--gold);text-decoration:none;display:inline-flex;align-items:center;gap:.3rem;margin-bottom:1.5rem}
+.post-back:hover{text-decoration:underline}
+.post-title{font-family:var(--font-display);font-size:clamp(2rem,4vw,2.8rem);font-weight:600;color:var(--white-pure);line-height:1.2;margin-bottom:1rem}
+.post-info{font-size:.85rem;color:var(--gray);margin-bottom:.5rem}
+.post-body{font-size:1rem;line-height:1.85;color:var(--gray-light)}
+.post-body h1,.post-body h2,.post-body h3{font-family:var(--font-display);color:var(--white-pure);margin:2rem 0 .75rem}
+.post-body h1{font-size:1.8rem}
+.post-body h2{font-size:1.5rem}
+.post-body h3{font-size:1.2rem}
+.post-body p{margin-bottom:1rem}
+.post-body a{color:var(--gold);text-decoration:underline}
+.post-body code{background:rgba(212,168,67,.08);padding:.1rem .35rem;border-radius:2px;font-family:var(--font-mono);font-size:.88em}
+.post-body pre{background:rgba(6,14,26,.8);padding:1.25rem;border-radius:4px;overflow-x:auto;margin:1.25rem 0;border:1px solid rgba(212,168,67,.06)}
+.post-body pre code{background:none;padding:0}
+.post-body ul,.post-body ol{padding-left:1.5rem;margin-bottom:1rem}
+.post-body li{margin-bottom:.35rem}
+.post-body blockquote{border-left:3px solid var(--gold);padding-left:1.25rem;color:var(--gray);font-style:italic;margin:1.25rem 0}
+.post-body img{max-width:100%;border-radius:4px;margin:1rem 0}
+.post-body hr{border:none;height:1px;background:rgba(212,168,67,.1);margin:2rem 0}
+
+/* UPL disclaimer on blog */
+.blog-disclaimer{background:rgba(212,168,67,.04);border:1px solid rgba(212,168,67,.1);border-radius:3px;padding:1rem 1.25rem;margin-top:2.5rem;font-size:.78rem;color:var(--gray);line-height:1.6}
+
+/* Empty state */
+.empty-state{text-align:center;padding:4rem 2rem}
+.empty-state h3{font-family:var(--font-display);font-size:1.4rem;color:var(--white-pure);margin-bottom:.5rem}
+.empty-state p{color:var(--gray);font-size:.9rem}
+
+.spinner{width:32px;height:32px;border:3px solid rgba(212,168,67,.15);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:3rem auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Footer */
+.site-footer{border-top:1px solid rgba(212,168,67,.06);padding:3rem 0 2rem;margin-top:4rem}
+.site-footer .container{max-width:1200px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:2rem}
+.footer-brand .footer-logo{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;text-decoration:none}
+.footer-brand .footer-logo-text{font-family:var(--font-display);font-size:1.2rem;font-weight:600;color:var(--white);letter-spacing:.08em}
+.footer-brand p{font-size:.8rem;color:var(--gray);line-height:1.6;max-width:280px}
+.footer-col h4{font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem}
+.footer-col a{display:block;font-size:.82rem;color:var(--gray);text-decoration:none;margin-bottom:.5rem;transition:color .3s}
+.footer-col a:hover{color:var(--gold)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:1.5rem;border-top:1px solid rgba(212,168,67,.05)}
+.footer-copy{font-size:.75rem;color:rgba(138,153,171,.5)}
+.footer-disclaimer{font-size:.68rem;color:rgba(138,153,171,.4);line-height:1.6;max-width:800px;margin-top:1rem}
+
+@media(max-width:768px){
+  .nav-links{display:none}
+  .footer-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner" style="max-width:1200px">
+    <a href="/" class="nav-logo">
+      <svg width="32" height="32" viewBox="0 0 512 512" fill="none"><rect width="512" height="512" rx="64" fill="#0A1628"/><path d="M256,60 L380,90 L380,280 C380,360 325,420 256,450 C187,420 132,360 132,280 L132,90 Z" fill="#0F2140" stroke="#D4A843" stroke-width="4"/><line x1="190" y1="230" x2="322" y2="208" stroke="#D4A843" stroke-width="4" stroke-linecap="round"/><polygon points="256,195 247,215 265,215" fill="#D4A843"/><path d="M170,246 Q190,268 210,246" fill="none" stroke="#D4A843" stroke-width="3"/><path d="M302,224 Q322,246 342,224" fill="none" stroke="#D4A843" stroke-width="3"/></svg>
+      <span class="nav-logo-text">INVERITAS</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/blog.html" class="active">Blog</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li><a href="/login.html">Sign In</a></li>
+      <li><a href="/login.html" class="btn btn-gold">Get Started</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="container">
+    <!-- Blog list view -->
+    <div id="blogListView">
+      <div class="blog-header">
+        <h1>The Inversion Brief</h1>
+        <div class="subtitle">Weekly statutory inversion breakdowns, defense strategy insights, and legal tech analysis.</div>
+      </div>
+      <div id="blogPosts"><div class="spinner"></div></div>
+    </div>
+
+    <!-- Single post view -->
+    <div id="blogPostView" style="display:none">
+      <div class="post-header">
+        <a href="/blog.html" class="post-back">← Back to Blog</a>
+        <h1 class="post-title" id="singleTitle"></h1>
+        <div class="post-info" id="singleInfo"></div>
+        <div class="post-card-tags" id="singleTags" style="margin-top:.5rem"></div>
+      </div>
+      <div class="post-body" id="singleBody"></div>
+      <div class="blog-disclaimer">
+        This article is for informational purposes only and does not constitute legal advice. The analysis presented here is generated using AI tools and should be reviewed by a qualified legal professional before reliance in any legal proceeding. Inveritas is not a law firm and does not create an attorney-client relationship.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="container" style="max-width:1200px">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="/" class="footer-logo">
+          <svg width="28" height="28" viewBox="0 0 512 512" fill="none"><rect width="512" height="512" rx="64" fill="#0A1628"/><path d="M256,60 L380,90 L380,280 C380,360 325,420 256,450 C187,420 132,360 132,280 L132,90 Z" fill="#0F2140" stroke="#D4A843" stroke-width="4"/><line x1="190" y1="230" x2="322" y2="208" stroke="#D4A843" stroke-width="4" stroke-linecap="round"/><polygon points="256,195 247,215 265,215" fill="#D4A843"/><path d="M170,246 Q190,268 210,246" fill="none" stroke="#D4A843" stroke-width="3"/><path d="M302,224 Q322,246 342,224" fill="none" stroke="#D4A843" stroke-width="3"/></svg>
+          <span class="footer-logo-text">INVERITAS</span>
+        </a>
+        <p>AI-powered statutory inversion across federal, state, and municipal jurisdictions. Turn the law back on itself.</p>
+      </div>
+      <div class="footer-col"><h4>Product</h4><a href="/analyze.html">Analysis Engine</a><a href="/dashboard.html">Dashboard</a><a href="/#pricing">Pricing</a><a href="/blog.html">Blog</a></div>
+      <div class="footer-col"><h4>Company</h4><a href="/#how-it-works">How It Works</a><a href="/#technology">Technology</a><a href="mailto:travis@inveritaslaw.com">Contact</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="/terms.html">Terms of Service</a><a href="/privacy.html">Privacy Policy</a><a href="/cookies.html">Cookie Policy</a></div>
+    </div>
+    <div class="footer-bottom"><div class="footer-copy">&copy; 2026 Inveritas. All rights reserved.</div></div>
+    <div class="footer-disclaimer">Inveritas is a legal research and analysis tool. It does not constitute legal advice, create an attorney-client relationship, or substitute for the judgment of a licensed attorney. All analysis is AI-generated and should be reviewed by a qualified legal professional. Inveritas is not a law firm.</div>
+  </div>
+</footer>
+
+<script>
+function esc(s){if(!s)return '';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+
+// Check URL for slug parameter
+var params = new URLSearchParams(window.location.search);
+var slug = params.get('post');
+
+if (slug) {
+  loadPost(slug);
+} else {
+  loadPosts();
+}
+
+async function loadPosts() {
+  try {
+    var r = await fetch('/api/blog');
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+    var posts = data.posts || [];
+
+    if (posts.length === 0) {
+      document.getElementById('blogPosts').innerHTML = '<div class="empty-state"><h3>Coming Soon</h3><p>The Inversion Brief is launching soon. Check back for weekly statutory inversion breakdowns and defense strategy analysis.</p></div>';
+      return;
+    }
+
+    var html = '';
+    posts.forEach(function(p) {
+      var date = p.published_at ? new Date(p.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+      html += '<div class="post-card"><a href="/blog.html?post=' + esc(p.slug) + '">' +
+        '<div class="post-card-date">' + date + ' &middot; ' + (p.reading_time_minutes || 5) + ' min read</div>' +
+        '<div class="post-card-title">' + esc(p.title) + '</div>' +
+        (p.excerpt ? '<div class="post-card-excerpt">' + esc(p.excerpt) + '</div>' : '') +
+        '<div class="post-card-tags">' + (p.tags || []).map(function(t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('') + '</div>' +
+        '</a></div>';
+    });
+    document.getElementById('blogPosts').innerHTML = html;
+  } catch (err) {
+    document.getElementById('blogPosts').innerHTML = '<p style="color:var(--red);text-align:center">Failed to load posts.</p>';
+  }
+}
+
+async function loadPost(slug) {
+  document.getElementById('blogListView').style.display = 'none';
+  document.getElementById('blogPostView').style.display = 'block';
+
+  try {
+    var r = await fetch('/api/blog?slug=' + encodeURIComponent(slug));
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+    var p = data.post;
+
+    // Update page title
+    document.title = p.title + ' — The Inversion Brief | Inveritas';
+    if (p.meta_description) {
+      var metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) metaDesc.content = p.meta_description;
+    }
+
+    var date = p.published_at ? new Date(p.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+
+    document.getElementById('singleTitle').textContent = p.title;
+    document.getElementById('singleInfo').innerHTML = esc(p.author_name) + (p.author_title ? ' &middot; ' + esc(p.author_title) : '') + ' &middot; ' + date + ' &middot; ' + (p.reading_time_minutes || 5) + ' min read';
+    document.getElementById('singleTags').innerHTML = (p.tags || []).map(function(t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('');
+
+    // Render markdown
+    if (p.content_format === 'html') {
+      document.getElementById('singleBody').innerHTML = p.content;
+    } else {
+      document.getElementById('singleBody').innerHTML = marked.parse(p.content || '');
+    }
+  } catch (err) {
+    document.getElementById('singleBody').innerHTML = '<div class="empty-state"><h3>Post Not Found</h3><p>This post may have been removed or the URL is incorrect.</p><a href="/blog.html" class="btn btn-outline">Back to Blog</a></div>';
+  }
+}
+</script>
+</body>
+</html>

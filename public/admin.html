@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inveritas — Admin</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- Markdown renderer for blog preview -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--navy-deep:#060E1A;--navy:#0A1628;--navy-mid:#0F2140;--navy-light:#1A3158;--gold:#D4A843;--gold-light:#E8C76A;--gold-dark:#B8912E;--gold-muted:rgba(212,168,67,0.15);--white:#F2F0ED;--white-pure:#FFF;--gray:#8A99AB;--gray-light:#C5CDD8;--red:#E85D5D;--green:#5DE8A0;--blue:#64B4FF;--purple:#B464FF;--font-display:'Cormorant Garamond',Georgia,serif;--font-body:'DM Sans',-apple-system,sans-serif;--font-mono:'JetBrains Mono',monospace}
+body{background:var(--navy-deep);color:var(--white);font-family:var(--font-body);font-weight:400;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:rgba(6,14,26,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(232,93,93,0.15)}
+.nav-inner{max-width:1400px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:.75rem;text-decoration:none}
+.nav-logo-text{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--white);letter-spacing:.08em}
+.admin-badge{font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.2rem .6rem;background:rgba(232,93,93,.15);color:var(--red);border-radius:2px;margin-left:.5rem}
+.nav-links{display:flex;align-items:center;gap:1.5rem;list-style:none}
+.nav-links a,.nav-links button{color:var(--gray);text-decoration:none;font-size:.85rem;font-weight:500;transition:color .3s;background:none;border:none;cursor:pointer;font-family:var(--font-body)}
+.nav-links a:hover,.nav-links button:hover{color:var(--gold)}
+
+.admin-wrap{max-width:1400px;margin:0 auto;padding:5.5rem 2rem 4rem;display:grid;grid-template-columns:220px 1fr;gap:2rem;min-height:100vh}
+
+/* Sidebar */
+.admin-sidebar{position:sticky;top:5.5rem;height:fit-content}
+.sidebar-nav{display:flex;flex-direction:column;gap:.25rem}
+.sidebar-item{padding:.7rem 1rem;font-size:.85rem;color:var(--gray);cursor:pointer;border-radius:3px;transition:all .2s;display:flex;align-items:center;gap:.5rem}
+.sidebar-item:hover{color:var(--gold-light);background:rgba(212,168,67,.04)}
+.sidebar-item.active{color:var(--gold);background:rgba(212,168,67,.08);font-weight:600}
+.sidebar-icon{width:16px;text-align:center;font-size:.9rem}
+
+/* Content */
+.admin-content{min-width:0}
+.admin-panel{display:none}
+.admin-panel.active{display:block}
+.panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem}
+.panel-title{font-family:var(--font-display);font-size:1.8rem;font-weight:600;color:var(--white-pure)}
+
+/* Stats Grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.stat-box{background:rgba(15,33,64,.4);border:1px solid rgba(212,168,67,.08);border-radius:4px;padding:1.5rem}
+.stat-box .val{font-family:var(--font-display);font-size:2.2rem;font-weight:700;color:var(--gold)}
+.stat-box .lbl{font-size:.72rem;color:var(--gray);letter-spacing:.04em;margin-top:.15rem}
+
+/* Tables */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{text-align:left;padding:.75rem 1rem;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid rgba(212,168,67,.1)}
+.data-table td{padding:.75rem 1rem;font-size:.85rem;color:var(--gray-light);border-bottom:1px solid rgba(212,168,67,.04)}
+.data-table tr:hover td{background:rgba(15,33,64,.3)}
+.tier-badge{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .5rem;border-radius:2px}
+.tier-none{background:rgba(138,153,171,.1);color:var(--gray)}
+.tier-single{background:rgba(100,180,255,.1);color:var(--blue)}
+.tier-practitioner{background:rgba(212,168,67,.1);color:var(--gold)}
+.tier-firm{background:rgba(93,232,160,.1);color:var(--green)}
+.tier-enterprise{background:rgba(180,100,255,.1);color:var(--purple)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.7rem 1.5rem;font-family:var(--font-body);font-size:.85rem;font-weight:600;letter-spacing:.04em;text-decoration:none;border-radius:3px;border:none;cursor:pointer;transition:all .3s}
+.btn-gold{background:var(--gold);color:var(--navy-deep)}
+.btn-gold:hover{background:var(--gold-light)}
+.btn-outline{background:transparent;color:var(--gold);border:1px solid rgba(212,168,67,.3)}
+.btn-outline:hover{border-color:var(--gold);background:var(--gold-muted)}
+.btn-sm{padding:.45rem .85rem;font-size:.78rem}
+.btn-green{background:rgba(93,232,160,.15);color:var(--green);border:1px solid rgba(93,232,160,.3)}
+.btn-green:hover{background:rgba(93,232,160,.25)}
+.btn-red{background:rgba(232,93,93,.15);color:var(--red);border:1px solid rgba(232,93,93,.3)}
+.btn-red:hover{background:rgba(232,93,93,.25)}
+
+/* Forms */
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:.4rem}
+.form-input,.form-select,.form-textarea{width:100%;background:rgba(6,14,26,0.8);border:1px solid rgba(212,168,67,0.12);border-radius:3px;padding:.75rem 1rem;color:var(--white);font-family:var(--font-body);font-size:.9rem;transition:border-color .3s;outline:none}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold)}
+.form-textarea{min-height:300px;resize:vertical;font-family:var(--font-mono);font-size:.85rem;line-height:1.6}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+
+/* Blog editor */
+.editor-container{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1rem}
+.editor-pane{background:rgba(6,14,26,.5);border:1px solid rgba(212,168,67,.08);border-radius:4px;overflow:hidden}
+.editor-pane-header{padding:.5rem 1rem;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid rgba(212,168,67,.08);background:rgba(15,33,64,.3)}
+.editor-pane .form-textarea{border:none;border-radius:0;min-height:500px;background:transparent}
+.preview-pane{padding:1.5rem;overflow-y:auto;max-height:600px;font-size:.9rem;color:var(--gray-light);line-height:1.8}
+.preview-pane h1,.preview-pane h2,.preview-pane h3{font-family:var(--font-display);color:var(--white-pure);margin:1rem 0 .5rem}
+.preview-pane h1{font-size:1.8rem}
+.preview-pane h2{font-size:1.4rem}
+.preview-pane h3{font-size:1.15rem}
+.preview-pane p{margin-bottom:.75rem}
+.preview-pane code{background:rgba(212,168,67,.08);padding:.1rem .3rem;border-radius:2px;font-family:var(--font-mono);font-size:.85em}
+.preview-pane pre{background:rgba(6,14,26,.8);padding:1rem;border-radius:3px;overflow-x:auto;margin:.75rem 0}
+.preview-pane pre code{background:none;padding:0}
+.preview-pane ul,.preview-pane ol{padding-left:1.5rem;margin-bottom:.75rem}
+.preview-pane blockquote{border-left:3px solid var(--gold);padding-left:1rem;color:var(--gray);margin:.75rem 0}
+
+/* Blog post list */
+.blog-post-row{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;background:rgba(15,33,64,.2);border:1px solid rgba(212,168,67,.04);border-radius:3px;margin-bottom:.5rem;transition:all .2s}
+.blog-post-row:hover{border-color:rgba(212,168,67,.15)}
+.post-title{font-size:.9rem;color:var(--white-pure);font-weight:500}
+.post-meta{font-size:.75rem;color:var(--gray);margin-top:.15rem}
+.post-status{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .5rem;border-radius:2px}
+.post-status-draft{background:rgba(138,153,171,.1);color:var(--gray)}
+.post-status-published{background:rgba(93,232,160,.1);color:var(--green)}
+
+/* Audit log */
+.audit-row{padding:.6rem 1rem;border-bottom:1px solid rgba(212,168,67,.03);font-size:.82rem}
+.audit-action{font-weight:600;color:var(--gold)}
+.audit-time{color:var(--gray);font-family:var(--font-mono);font-size:.75rem}
+
+/* Spinner */
+.spinner{width:32px;height:32px;border:3px solid rgba(212,168,67,.15);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:2rem auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.toast{position:fixed;bottom:2rem;right:2rem;padding:.75rem 1.5rem;background:var(--gold);color:var(--navy-deep);font-size:.85rem;font-weight:600;border-radius:3px;z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.error{background:var(--red);color:var(--white)}
+
+.search-input{background:rgba(6,14,26,.8);border:1px solid rgba(212,168,67,.12);border-radius:3px;padding:.5rem 1rem;color:var(--white);font-family:var(--font-body);font-size:.85rem;outline:none;width:250px}
+.search-input:focus{border-color:var(--gold)}
+
+@media(max-width:900px){
+  .admin-wrap{grid-template-columns:1fr}
+  .admin-sidebar{position:relative;top:0}
+  .sidebar-nav{flex-direction:row;overflow-x:auto;gap:.5rem}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .editor-container{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <svg width="32" height="32" viewBox="0 0 512 512" fill="none"><rect width="512" height="512" rx="64" fill="#0A1628"/><path d="M256,60 L380,90 L380,280 C380,360 325,420 256,450 C187,420 132,360 132,280 L132,90 Z" fill="#0F2140" stroke="#D4A843" stroke-width="4"/><line x1="190" y1="230" x2="322" y2="208" stroke="#D4A843" stroke-width="4" stroke-linecap="round"/><polygon points="256,195 247,215 265,215" fill="#D4A843"/><path d="M170,246 Q190,268 210,246" fill="none" stroke="#D4A843" stroke-width="3"/><path d="M302,224 Q322,246 342,224" fill="none" stroke="#D4A843" stroke-width="3"/></svg>
+      <span class="nav-logo-text">INVERITAS</span>
+      <span class="admin-badge">ADMIN</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/analyze.html">Analysis</a></li>
+      <li><a href="/blog.html">Blog</a></li>
+      <li><button onclick="doLogout()">Sign Out</button></li>
+    </ul>
+  </div>
+</nav>
+
+<div id="loadingState"><div class="spinner" style="margin-top:8rem"></div></div>
+<div id="accessDenied" style="display:none;text-align:center;padding:8rem 2rem">
+  <h2 style="font-family:var(--font-display);font-size:1.8rem;color:var(--red)">Access Denied</h2>
+  <p style="color:var(--gray);margin-top:.5rem">This page is restricted to admin users only.</p>
+  <a href="/" class="btn btn-outline" style="margin-top:1rem">Go Home</a>
+</div>
+
+<div class="admin-wrap" id="adminWrap" style="display:none">
+  <aside class="admin-sidebar">
+    <div class="sidebar-nav">
+      <div class="sidebar-item active" onclick="showPanel('overview')"><span class="sidebar-icon">📊</span> Overview</div>
+      <div class="sidebar-item" onclick="showPanel('users')"><span class="sidebar-icon">👥</span> Users</div>
+      <div class="sidebar-item" onclick="showPanel('blog')"><span class="sidebar-icon">📝</span> Blog</div>
+      <div class="sidebar-item" onclick="showPanel('blog-editor')"><span class="sidebar-icon">✏️</span> New Post</div>
+      <div class="sidebar-item" onclick="showPanel('audit')"><span class="sidebar-icon">📋</span> Audit Log</div>
+    </div>
+  </aside>
+
+  <main class="admin-content">
+    <!-- OVERVIEW -->
+    <div class="admin-panel active" id="panel-overview">
+      <div class="panel-header"><h1 class="panel-title">Platform Overview</h1></div>
+      <div class="stats-grid" id="statsGrid"><div class="spinner" style="grid-column:1/-1"></div></div>
+      <div id="subBreakdown"></div>
+    </div>
+
+    <!-- USERS -->
+    <div class="admin-panel" id="panel-users">
+      <div class="panel-header">
+        <h1 class="panel-title">User Management</h1>
+        <input type="text" class="search-input" placeholder="Search by email..." id="userSearch" oninput="searchUsers()">
+      </div>
+      <div id="usersTable"><div class="spinner"></div></div>
+    </div>
+
+    <!-- BLOG LIST -->
+    <div class="admin-panel" id="panel-blog">
+      <div class="panel-header">
+        <h1 class="panel-title">Blog Posts</h1>
+        <button class="btn btn-gold" onclick="showPanel('blog-editor')">+ New Post</button>
+      </div>
+      <div id="blogList"><div class="spinner"></div></div>
+    </div>
+
+    <!-- BLOG EDITOR -->
+    <div class="admin-panel" id="panel-blog-editor">
+      <div class="panel-header">
+        <h1 class="panel-title" id="editorTitle">New Blog Post</h1>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-outline btn-sm" onclick="saveBlogPost('draft')">Save Draft</button>
+          <button class="btn btn-gold btn-sm" onclick="saveBlogPost('published')">Publish</button>
+        </div>
+      </div>
+      <input type="hidden" id="editPostId" value="">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input type="text" class="form-input" id="postTitle" placeholder="Post title">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Slug</label>
+          <input type="text" class="form-input" id="postSlug" placeholder="auto-generated-from-title">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Excerpt</label>
+          <input type="text" class="form-input" id="postExcerpt" placeholder="Brief summary for listings and SEO">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tags (comma-separated)</label>
+          <input type="text" class="form-input" id="postTags" placeholder="statutory-inversion, defense, texas">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Meta Title (SEO)</label>
+          <input type="text" class="form-input" id="postMetaTitle" placeholder="SEO title (leave blank to use post title)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Meta Description (SEO)</label>
+          <input type="text" class="form-input" id="postMetaDesc" placeholder="SEO description (max 160 chars)">
+        </div>
+      </div>
+      <div class="editor-container">
+        <div class="editor-pane">
+          <div class="editor-pane-header">Markdown Editor</div>
+          <textarea class="form-textarea" id="postContent" placeholder="Write your post in Markdown..." oninput="updatePreview()"></textarea>
+        </div>
+        <div class="editor-pane">
+          <div class="editor-pane-header">Preview</div>
+          <div class="preview-pane" id="postPreview"><p style="color:var(--gray)">Start typing to see preview...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT LOG -->
+    <div class="admin-panel" id="panel-audit">
+      <div class="panel-header"><h1 class="panel-title">Audit Log</h1></div>
+      <div id="auditList"><div class="spinner"></div></div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var ADMIN_EMAIL = 'glossontravis@gmail.com';
+var SUPABASE_URL = 'https://dmkuskjfvnniqpjmlnmz.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRta3Vza2pmdm5uaXFwam1sbm16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NzcwMzIsImV4cCI6MjA5MDM1MzAzMn0.F7vzx6RwdnpT9DB1LT1y5uP9WXdWNpcytwSFFsv7D4o';
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var currentSession = null;
+
+function esc(s){if(!s)return '';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+function showToast(m,e){var t=document.getElementById('toast');t.textContent=m;t.className='toast show'+(e?' error':'');setTimeout(function(){t.className='toast'},3000)}
+
+// Auth + admin check
+(async function(){
+  var result = await sb.auth.getSession();
+  var session = result.data.session;
+  document.getElementById('loadingState').style.display = 'none';
+
+  if (!session || session.user.email !== ADMIN_EMAIL) {
+    document.getElementById('accessDenied').style.display = 'block';
+    return;
+  }
+
+  currentSession = session;
+  document.getElementById('adminWrap').style.display = 'grid';
+  loadOverview();
+  loadUsers();
+  loadBlogPosts();
+  loadAuditLog();
+})();
+
+function authHeaders(){return{'Content-Type':'application/json','Authorization':'Bearer '+currentSession.access_token}}
+
+// ===== NAVIGATION =====
+function showPanel(name){
+  document.querySelectorAll('.sidebar-item').forEach(function(s){s.classList.remove('active')});
+  document.querySelectorAll('.admin-panel').forEach(function(p){p.classList.remove('active')});
+  document.getElementById('panel-'+name).classList.add('active');
+  event.target.closest('.sidebar-item').classList.add('active');
+  if(name==='blog-editor'&&!document.getElementById('editPostId').value){clearEditor()}
+}
+
+// ===== OVERVIEW =====
+async function loadOverview(){
+  try{
+    var r = await fetch('/api/admin?action=stats',{headers:authHeaders()});
+    var data = await r.json();
+    if(data.error)throw new Error(data.error);
+    var s=data.stats||{};
+    var grid=document.getElementById('statsGrid');
+    grid.innerHTML=
+      '<div class="stat-box"><div class="val">'+esc(s.total_users||0)+'</div><div class="lbl">Total Users</div></div>'+
+      '<div class="stat-box"><div class="val">'+esc(s.total_cases||0)+'</div><div class="lbl">Total Cases</div></div>'+
+      '<div class="stat-box"><div class="val">'+esc(s.total_analyses||0)+'</div><div class="lbl">Total Analyses</div></div>'+
+      '<div class="stat-box"><div class="val">'+esc(s.analyses_this_month||0)+'</div><div class="lbl">Analyses This Month</div></div>';
+
+    var breakdown=s.subscription_breakdown||{};
+    var bHtml='<div style="margin-top:1.5rem"><h3 style="font-family:var(--font-display);font-size:1.2rem;color:var(--white-pure);margin-bottom:1rem">Subscription Breakdown</h3>';
+    Object.keys(breakdown).forEach(function(k){
+      bHtml+='<div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid rgba(212,168,67,.04)"><span class="tier-badge tier-'+k+'">'+k+'</span><span style="color:var(--gray-light)">'+breakdown[k]+' users</span></div>';
+    });
+    bHtml+='</div>';
+    document.getElementById('subBreakdown').innerHTML=bHtml;
+  }catch(err){document.getElementById('statsGrid').innerHTML='<p style="color:var(--red)">'+esc(err.message)+'</p>'}
+}
+
+// ===== USERS =====
+var usersSearchTimeout;
+function searchUsers(){
+  clearTimeout(usersSearchTimeout);
+  usersSearchTimeout=setTimeout(function(){loadUsers()},300);
+}
+
+async function loadUsers(){
+  var search=document.getElementById('userSearch')?document.getElementById('userSearch').value:'';
+  try{
+    var url='/api/admin?action=users&per_page=50';
+    if(search)url+='&search='+encodeURIComponent(search);
+    var r=await fetch(url,{headers:authHeaders()});
+    var data=await r.json();
+    if(data.error)throw new Error(data.error);
+    var users=data.users||[];
+    var html='<table class="data-table"><thead><tr><th>Email</th><th>Tier</th><th>Analyses</th><th>Cases</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
+    users.forEach(function(u){
+      var tier=u.subscription_tier||'none';
+      html+='<tr><td>'+esc(u.email)+'</td>'+
+        '<td><span class="tier-badge tier-'+tier+'">'+tier+'</span></td>'+
+        '<td>'+esc(u.analyses_this_month||0)+'/'+esc(u.analyses_total||0)+'</td>'+
+        '<td>'+(u.cases?u.cases[0]?.count||0:0)+'</td>'+
+        '<td>'+new Date(u.created_at).toLocaleDateString()+'</td>'+
+        '<td><button class="btn btn-outline btn-sm" onclick="editUserTier(\''+u.user_id+'\',\''+tier+'\')">Edit</button></td></tr>';
+    });
+    html+='</tbody></table><div style="margin-top:1rem;font-size:.8rem;color:var(--gray)">'+data.total+' total users</div>';
+    document.getElementById('usersTable').innerHTML=html;
+  }catch(err){document.getElementById('usersTable').innerHTML='<p style="color:var(--red)">'+esc(err.message)+'</p>'}
+}
+
+function editUserTier(userId,currentTier){
+  var newTier=prompt('Enter new tier (none, single, practitioner, firm, enterprise).\nCurrent: '+currentTier);
+  if(!newTier||newTier===currentTier)return;
+  fetch('/api/admin?action=update_user',{
+    method:'PUT',
+    headers:authHeaders(),
+    body:JSON.stringify({user_id:userId,subscription_tier:newTier})
+  }).then(function(r){return r.json()}).then(function(d){
+    if(d.error)throw new Error(d.error);
+    showToast('User tier updated to '+newTier);
+    loadUsers();
+    loadOverview();
+  }).catch(function(e){showToast('Failed: '+e.message,true)});
+}
+
+// ===== BLOG =====
+async function loadBlogPosts(){
+  try{
+    var r=await fetch('/api/admin?action=blog_list',{headers:authHeaders()});
+    var data=await r.json();
+    if(data.error)throw new Error(data.error);
+    var posts=data.posts||[];
+    if(posts.length===0){
+      document.getElementById('blogList').innerHTML='<div style="text-align:center;padding:3rem"><p style="color:var(--gray)">No blog posts yet.</p><button class="btn btn-gold" onclick="showPanel(\'blog-editor\')">Write First Post</button></div>';
+      return;
+    }
+    var html='';
+    posts.forEach(function(p){
+      var statusCls='post-status-'+(p.status||'draft');
+      html+='<div class="blog-post-row">'+
+        '<div><div class="post-title">'+esc(p.title)+'</div><div class="post-meta">'+
+          (p.published_at?new Date(p.published_at).toLocaleDateString()+' &middot; ':'') +
+          esc((p.tags||[]).join(', '))+' &middot; '+esc(p.view_count||0)+' views</div></div>'+
+        '<div style="display:flex;align-items:center;gap:.75rem">'+
+          '<span class="post-status '+statusCls+'">'+esc(p.status)+'</span>'+
+          '<button class="btn btn-outline btn-sm" onclick="editPost(\''+p.id+'\')">Edit</button>'+
+          '<button class="btn btn-red btn-sm" onclick="deletePost(\''+p.id+'\',\''+esc(p.title).replace(/'/g,"\\'")+'\')">Delete</button>'+
+        '</div></div>';
+    });
+    document.getElementById('blogList').innerHTML=html;
+  }catch(err){document.getElementById('blogList').innerHTML='<p style="color:var(--red)">'+esc(err.message)+'</p>'}
+}
+
+function clearEditor(){
+  document.getElementById('editPostId').value='';
+  document.getElementById('editorTitle').textContent='New Blog Post';
+  document.getElementById('postTitle').value='';
+  document.getElementById('postSlug').value='';
+  document.getElementById('postExcerpt').value='';
+  document.getElementById('postTags').value='';
+  document.getElementById('postMetaTitle').value='';
+  document.getElementById('postMetaDesc').value='';
+  document.getElementById('postContent').value='';
+  document.getElementById('postPreview').innerHTML='<p style="color:var(--gray)">Start typing to see preview...</p>';
+}
+
+async function editPost(postId){
+  try{
+    var r=await fetch('/api/admin?action=blog_get&post_id='+postId,{headers:authHeaders()});
+    var data=await r.json();
+    if(data.error)throw new Error(data.error);
+    var p=data.post;
+    document.getElementById('editPostId').value=p.id;
+    document.getElementById('editorTitle').textContent='Edit: '+p.title;
+    document.getElementById('postTitle').value=p.title||'';
+    document.getElementById('postSlug').value=p.slug||'';
+    document.getElementById('postExcerpt').value=p.excerpt||'';
+    document.getElementById('postTags').value=(p.tags||[]).join(', ');
+    document.getElementById('postMetaTitle').value=p.meta_title||'';
+    document.getElementById('postMetaDesc').value=p.meta_description||'';
+    document.getElementById('postContent').value=p.content||'';
+    updatePreview();
+    // Switch to editor panel
+    document.querySelectorAll('.sidebar-item').forEach(function(s){s.classList.remove('active')});
+    document.querySelectorAll('.admin-panel').forEach(function(p){p.classList.remove('active')});
+    document.getElementById('panel-blog-editor').classList.add('active');
+  }catch(err){showToast('Failed to load post: '+err.message,true)}
+}
+
+async function saveBlogPost(status){
+  var postId=document.getElementById('editPostId').value;
+  var title=document.getElementById('postTitle').value.trim();
+  if(!title){showToast('Title is required',true);return}
+
+  var tags=document.getElementById('postTags').value.split(',').map(function(t){return t.trim()}).filter(Boolean);
+  var payload={
+    title:title,
+    slug:document.getElementById('postSlug').value.trim()||null,
+    excerpt:document.getElementById('postExcerpt').value.trim(),
+    content:document.getElementById('postContent').value,
+    tags:tags,
+    meta_title:document.getElementById('postMetaTitle').value.trim()||null,
+    meta_description:document.getElementById('postMetaDesc').value.trim()||null,
+    status:status
+  };
+
+  try{
+    var url,method;
+    if(postId){
+      payload.post_id=postId;
+      url='/api/admin?action=blog_update';
+      method='PUT';
+    }else{
+      url='/api/admin?action=blog_create';
+      method='POST';
+    }
+    var r=await fetch(url,{method:method,headers:authHeaders(),body:JSON.stringify(payload)});
+    var data=await r.json();
+    if(data.error)throw new Error(data.error);
+
+    showToast(status==='published'?'Post published!':'Draft saved');
+    document.getElementById('editPostId').value=data.post.id;
+    loadBlogPosts();
+  }catch(err){showToast('Failed: '+err.message,true)}
+}
+
+async function deletePost(postId,title){
+  if(!confirm('Delete "'+title+'"? This cannot be undone.'))return;
+  try{
+    var r=await fetch('/api/admin?action=blog_delete&post_id='+postId,{method:'DELETE',headers:authHeaders()});
+    var data=await r.json();
+    if(data.error)throw new Error(data.error);
+    showToast('Post deleted');
+    loadBlogPosts();
+  }catch(err){showToast('Failed: '+err.message,true)}
+}
+
+function updatePreview(){
+  var content=document.getElementById('postContent').value;
+  if(!content){document.getElementById('postPreview').innerHTML='<p style="color:var(--gray)">Start typing to see preview...</p>';return}
+  try{document.getElementById('postPreview').innerHTML=marked.parse(content)}
+  catch(e){document.getElementById('postPreview').innerHTML='<p style="color:var(--red)">Parse error</p>'}
+}
+
+// Auto-generate slug from title
+document.getElementById('postTitle').addEventListener('input',function(){
+  if(!document.getElementById('editPostId').value){
+    document.getElementById('postSlug').value=this.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,100);
+  }
+});
+
+// ===== AUDIT LOG =====
+async function loadAuditLog(){
+  try{
+    var r=await fetch('/api/admin?action=audit_log&limit=100',{headers:authHeaders()});
+    var data=await r.json();
+    if(data.error)throw new Error(data.error);
+    var logs=data.logs||[];
+    if(logs.length===0){document.getElementById('auditList').innerHTML='<p style="color:var(--gray)">No audit entries yet.</p>';return}
+    var html='';
+    logs.forEach(function(l){
+      html+='<div class="audit-row"><span class="audit-action">'+esc(l.action)+'</span> '+
+        '<span style="color:var(--gray-light)">'+(l.entity_type?esc(l.entity_type)+' ':'')+(l.entity_id?esc(l.entity_id.slice(0,8)):'')+'</span> '+
+        '<span style="color:var(--gray)">'+(l.admin_email?'by '+esc(l.admin_email):'')+'</span> '+
+        '<span class="audit-time">'+new Date(l.created_at).toLocaleString()+'</span></div>';
+    });
+    document.getElementById('auditList').innerHTML=html;
+  }catch(err){document.getElementById('auditList').innerHTML='<p style="color:var(--red)">'+esc(err.message)+'</p>'}
+}
+
+async function doLogout(){await sb.auth.signOut();window.location.href='/login.html'}
+</script>
+</body>
+</html>

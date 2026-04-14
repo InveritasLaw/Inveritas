@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4A843;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#B8912E;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shieldFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0F2140;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0A1628;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="64" fill="#0A1628"/>
+
+  <!-- Shield - centered and scaled up -->
+  <path d="M256,60 L380,90 L380,280 C380,360 325,420 256,450 C187,420 132,360 132,280 L132,90 Z" 
+        fill="url(#shieldFill)" stroke="url(#goldGrad)" stroke-width="4"/>
+  
+  <!-- Center pillar -->
+  <line x1="256" y1="130" x2="256" y2="370" stroke="#D4A843" stroke-width="2.5" opacity="0.2"/>
+  
+  <!-- Balance beam - INVERTED -->
+  <line x1="190" y1="230" x2="322" y2="208" stroke="url(#goldGrad)" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Fulcrum (inverted triangle) -->
+  <polygon points="256,195 247,215 265,215" fill="#D4A843"/>
+  
+  <!-- Left scale pan (lower) -->
+  <line x1="190" y1="230" x2="174" y2="246" stroke="#D4A843" stroke-width="2.5"/>
+  <line x1="190" y1="230" x2="206" y2="246" stroke="#D4A843" stroke-width="2.5"/>
+  <path d="M170,246 Q190,268 210,246" fill="none" stroke="#D4A843" stroke-width="3"/>
+  
+  <!-- Right scale pan (higher) -->
+  <line x1="322" y1="208" x2="306" y2="224" stroke="#D4A843" stroke-width="2.5"/>
+  <line x1="322" y1="208" x2="338" y2="224" stroke="#D4A843" stroke-width="2.5"/>
+  <path d="M302,224 Q322,246 342,224" fill="none" stroke="#D4A843" stroke-width="3"/>
+  
+  <!-- Inversion arrows -->
+  <path d="M218,310 C196,294 196,268 218,252" fill="none" stroke="#D4A843" stroke-width="2" opacity="0.5"/>
+  <polygon points="218,252 214,263 222,261" fill="#D4A843" opacity="0.5"/>
+  
+  <path d="M294,252 C316,268 316,294 294,310" fill="none" stroke="#D4A843" stroke-width="2" opacity="0.5"/>
+  <polygon points="294,310 298,299 290,301" fill="#D4A843" opacity="0.5"/>
+
+  <!-- Base accent -->
+  <line x1="226" y1="400" x2="256" y2="415" stroke="#D4A843" stroke-width="1.5" opacity="0.4"/>
+  <line x1="286" y1="400" x2="256" y2="415" stroke="#D4A843" stroke-width="1.5" opacity="0.4"/>
+
+</svg>

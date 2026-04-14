@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4A843;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#B8912E;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" fill="#FFFFFF"/>
+
+  <!-- === LOGO MARK === -->
+  <!-- Shield shape -->
+  <path d="M160,80 L230,95 L230,190 C230,230 200,265 160,280 C120,265 90,230 90,190 L90,95 Z" 
+        fill="#0A1628" stroke="url(#goldGrad)" stroke-width="2.5"/>
+  
+  <!-- Inverted scales of justice inside shield -->
+  <line x1="160" y1="120" x2="160" y2="240" stroke="#D4A843" stroke-width="2" opacity="0.3"/>
+  
+  <!-- Balance beam - INVERTED -->
+  <line x1="118" y1="155" x2="202" y2="140" stroke="url(#goldGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  
+  <!-- Fulcrum triangle (inverted) -->
+  <polygon points="160,130 154,142 166,142" fill="#D4A843"/>
+  
+  <!-- Left scale pan -->
+  <line x1="118" y1="155" x2="108" y2="165" stroke="#D4A843" stroke-width="1.5"/>
+  <line x1="118" y1="155" x2="128" y2="165" stroke="#D4A843" stroke-width="1.5"/>
+  <path d="M105,165 Q118,178 131,165" fill="none" stroke="#D4A843" stroke-width="1.8"/>
+  
+  <!-- Right scale pan -->
+  <line x1="202" y1="140" x2="192" y2="150" stroke="#D4A843" stroke-width="1.5"/>
+  <line x1="202" y1="140" x2="212" y2="150" stroke="#D4A843" stroke-width="1.5"/>
+  <path d="M189,150 Q202,163 215,150" fill="none" stroke="#D4A843" stroke-width="1.8"/>
+  
+  <!-- Inversion arrows -->
+  <path d="M138,195 C125,185 125,170 138,160" fill="none" stroke="#D4A843" stroke-width="1.2" opacity="0.6"/>
+  <polygon points="138,160 135,167 141,166" fill="#D4A843" opacity="0.6"/>
+  <path d="M182,160 C195,170 195,185 182,195" fill="none" stroke="#D4A843" stroke-width="1.2" opacity="0.6"/>
+  <polygon points="182,195 185,188 179,189" fill="#D4A843" opacity="0.6"/>
+
+  <!-- Shield base lines -->
+  <line x1="140" y1="255" x2="160" y2="265" stroke="#D4A843" stroke-width="1" opacity="0.4"/>
+  <line x1="180" y1="255" x2="160" y2="265" stroke="#D4A843" stroke-width="1" opacity="0.4"/>
+
+  <!-- === WORDMARK === -->
+  <text x="270" y="195" font-family="'Georgia', 'Times New Roman', serif" font-size="72" font-weight="bold" letter-spacing="8" fill="#0A1628">
+    INVERITAS
+  </text>
+  
+  <!-- Divider -->
+  <line x1="270" y1="205" x2="720" y2="205" stroke="#D4A843" stroke-width="0.8" opacity="0.5"/>
+
+  <!-- Tagline -->
+  <text x="272" y="228" font-family="'Helvetica Neue', 'Arial', sans-serif" font-size="16" letter-spacing="6" fill="#B8912E">
+    TURN THE LAW BACK ON ITSELF
+  </text>
+
+  <!-- Descriptor -->
+  <text x="270" y="310" font-family="'Helvetica Neue', 'Arial', sans-serif" font-size="11" letter-spacing="3" fill="#8A99AB" opacity="0.7">
+    LEGAL DEFENSE AI
+  </text>
+
+</svg>

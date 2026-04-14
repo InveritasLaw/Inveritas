@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inveritas — Turn the Law Back on Itself | AI-Powered Legal Defense Analysis</title>
+<meta name="description" content="Inveritas inverts statutory language across federal, state, and municipal jurisdictions to surface defense vectors invisible to manual review. The AI defense engine for attorneys.">
+<meta name="keywords" content="legal defense AI, statutory analysis, criminal defense tool, legal tech, defense vectors, statutory inversion">
+<meta property="og:title" content="Inveritas — Turn the Law Back on Itself">
+<meta property="og:description" content="AI-powered legal defense analysis across federal, state, and municipal jurisdictions.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://inveritaslaw.com">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy-deep: #060E1A;
+  --navy: #0A1628;
+  --navy-mid: #0F2140;
+  --navy-light: #1A3158;
+  --gold: #D4A843;
+  --gold-light: #E8C76A;
+  --gold-dark: #B8912E;
+  --gold-muted: rgba(212, 168, 67, 0.15);
+  --white: #F2F0ED;
+  --white-pure: #FFFFFF;
+  --gray: #8A99AB;
+  --gray-light: #C5CDD8;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--navy-deep);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== NOISE TEXTURE OVERLAY ===== */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ===== UTILITIES ===== */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+.gold { color: var(--gold); }
+.text-center { text-align: center; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== NAV ===== */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 1.25rem 0;
+  background: rgba(6, 14, 26, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(212, 168, 67, 0.08);
+  transition: all 0.4s ease;
+}
+nav.scrolled {
+  padding: 0.8rem 0;
+  background: rgba(6, 14, 26, 0.95);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+.nav-logo-icon {
+  width: 36px;
+  height: 36px;
+}
+.nav-logo-text {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: 0.08em;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  list-style: none;
+}
+.nav-links a {
+  color: var(--gray);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  transition: color 0.3s ease;
+}
+.nav-links a:hover { color: var(--gold); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+}
+.btn-gold {
+  background: var(--gold);
+  color: var(--navy-deep);
+}
+.btn-gold:hover {
+  background: var(--gold-light);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 30px rgba(212, 168, 67, 0.3);
+}
+.btn-outline {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid rgba(212, 168, 67, 0.4);
+}
+.btn-outline:hover {
+  border-color: var(--gold);
+  background: var(--gold-muted);
+}
+.btn-large {
+  padding: 1rem 2.5rem;
+  font-size: 1rem;
+}
+
+/* ===== MOBILE NAV ===== */
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px;
+}
+.nav-toggle span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--gold);
+  transition: all 0.3s ease;
+}
+
+/* ===== HERO ===== */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-top: 5rem;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -40%; right: -20%;
+  width: 800px; height: 800px;
+  background: radial-gradient(circle, rgba(212, 168, 67, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 200px;
+  background: linear-gradient(to bottom, transparent, var(--navy-deep));
+  pointer-events: none;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+.hero-content { position: relative; z-index: 2; }
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid rgba(212, 168, 67, 0.25);
+  border-radius: 2px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+  animation: fadeUp 0.8s ease both;
+}
+.hero-badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--gold);
+  border-radius: 50%;
+  animation: pulse 2s ease infinite;
+}
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 5.5vw, 4.5rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--white-pure);
+  margin-bottom: 1.5rem;
+  animation: fadeUp 0.8s ease 0.15s both;
+}
+.hero-tagline {
+  font-size: 1.2rem;
+  line-height: 1.7;
+  color: var(--gray);
+  max-width: 480px;
+  margin-bottom: 2.5rem;
+  animation: fadeUp 0.8s ease 0.3s both;
+}
+.hero-ctas {
+  display: flex;
+  gap: 1rem;
+  animation: fadeUp 0.8s ease 0.45s both;
+}
+.hero-stats {
+  display: flex;
+  gap: 3rem;
+  margin-top: 3.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgba(212, 168, 67, 0.1);
+  animation: fadeUp 0.8s ease 0.6s both;
+}
+.hero-stat-number {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+.hero-stat-label {
+  font-size: 0.8rem;
+  color: var(--gray);
+  margin-top: 0.3rem;
+  letter-spacing: 0.04em;
+}
+
+/* Hero visual — SVG scales animation */
+.hero-visual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: scaleIn 1s ease 0.3s both;
+}
+.hero-visual-glow {
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(212, 168, 67, 0.08) 0%, transparent 60%);
+  border-radius: 50%;
+}
+
+/* ===== SECTION STYLES ===== */
+section {
+  padding: 7rem 0;
+  position: relative;
+}
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1rem;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 600;
+  color: var(--white-pure);
+  line-height: 1.2;
+  margin-bottom: 1.25rem;
+}
+.section-subtitle {
+  font-size: 1.1rem;
+  color: var(--gray);
+  max-width: 600px;
+  line-height: 1.7;
+}
+.section-subtitle.centered { margin: 0 auto; }
+
+/* ===== HOW IT WORKS ===== */
+.how-it-works { background: var(--navy); }
+.how-it-works::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(212, 168, 67, 0.2), transparent);
+}
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-top: 4rem;
+}
+.step {
+  padding: 2.5rem 2rem;
+  background: rgba(15, 33, 64, 0.5);
+  border: 1px solid rgba(212, 168, 67, 0.08);
+  border-radius: 3px;
+  transition: all 0.4s ease;
+  position: relative;
+}
+.step:hover {
+  border-color: rgba(212, 168, 67, 0.25);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.step-number {
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: rgba(212, 168, 67, 0.12);
+  line-height: 1;
+  margin-bottom: 1.25rem;
+}
+.step h3 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--white-pure);
+  margin-bottom: 0.75rem;
+}
+.step p {
+  font-size: 0.95rem;
+  color: var(--gray);
+  line-height: 1.7;
+}
+
+/* ===== THREE TIERS ===== */
+.tiers-section { background: var(--navy-deep); }
+.tiers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-top: 4rem;
+  border: 1px solid rgba(212, 168, 67, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.tier {
+  padding: 3rem 2.5rem;
+  background: rgba(10, 22, 40, 0.6);
+  border-right: 1px solid rgba(212, 168, 67, 0.08);
+  position: relative;
+  transition: all 0.3s ease;
+}
+.tier:last-child { border-right: none; }
+.tier:hover { background: rgba(15, 33, 64, 0.6); }
+.tier-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  margin-bottom: 1.5rem;
+}
+.tier-federal .tier-badge { background: rgba(212, 168, 67, 0.15); color: var(--gold); }
+.tier-state .tier-badge { background: rgba(100, 180, 255, 0.12); color: #64B4FF; }
+.tier-municipal .tier-badge { background: rgba(120, 220, 160, 0.12); color: #78DCA0; }
+.tier h3 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--white-pure);
+  margin-bottom: 0.75rem;
+}
+.tier p {
+  font-size: 0.9rem;
+  color: var(--gray);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+.tier-items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.tier-items li {
+  font-size: 0.85rem;
+  color: var(--gray-light);
+  padding-left: 1.25rem;
+  position: relative;
+}
+.tier-items li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--gold-dark);
+}
+
+/* ===== CONFLICT DETECTION CALLOUT ===== */
+.conflict-callout {
+  margin-top: 3rem;
+  padding: 2.5rem 3rem;
+  background: linear-gradient(135deg, rgba(212, 168, 67, 0.08), rgba(212, 168, 67, 0.02));
+  border: 1px solid rgba(212, 168, 67, 0.2);
+  border-radius: 3px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+.conflict-icon {
+  width: 64px; height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+}
+.conflict-callout h3 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--gold);
+  margin-bottom: 0.5rem;
+}
+.conflict-callout p {
+  font-size: 0.95rem;
+  color: var(--gray-light);
+  line-height: 1.7;
+}
+
+/* ===== PRICING ===== */
+.pricing-section {
+  background: var(--navy);
+  position: relative;
+}
+.pricing-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(212, 168, 67, 0.2), transparent);
+}
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-top: 4rem;
+}
+.price-card {
+  padding: 2.5rem 2rem;
+  background: rgba(6, 14, 26, 0.8);
+  border: 1px solid rgba(212, 168, 67, 0.08);
+  border-radius: 3px;
+  transition: all 0.4s ease;
+  position: relative;
+}
+.price-card:hover {
+  border-color: rgba(212, 168, 67, 0.2);
+  transform: translateY(-4px);
+}
+.price-card.featured {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(212, 168, 67, 0.06), rgba(6, 14, 26, 0.9));
+}
+.price-card.featured::before {
+  content: 'MOST POPULAR';
+  position: absolute;
+  top: -12px; left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 1rem;
+  background: var(--gold);
+  color: var(--navy-deep);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  border-radius: 2px;
+}
+.price-tier-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1rem;
+}
+.price-amount {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--white-pure);
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+.price-amount span {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--gray);
+}
+.price-desc {
+  font-size: 0.85rem;
+  color: var(--gray);
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(212, 168, 67, 0.08);
+}
+.price-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+.price-features li {
+  font-size: 0.85rem;
+  color: var(--gray-light);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.price-features li::before {
+  content: '✓';
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+.price-card .btn { width: 100%; justify-content: center; }
+
+/* ===== WHO IT'S FOR ===== */
+.audience-section { background: var(--navy-deep); }
+.audience-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-top: 4rem;
+}
+.audience-card {
+  padding: 2.5rem 2rem;
+  border: 1px solid rgba(212, 168, 67, 0.06);
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+.audience-card:hover {
+  border-color: rgba(212, 168, 67, 0.15);
+  background: rgba(15, 33, 64, 0.3);
+}
+.audience-icon {
+  font-size: 2rem;
+  margin-bottom: 1.25rem;
+}
+.audience-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--white-pure);
+  margin-bottom: 0.75rem;
+}
+.audience-card p {
+  font-size: 0.9rem;
+  color: var(--gray);
+  line-height: 1.7;
+}
+
+/* ===== CTA ===== */
+.cta-section {
+  padding: 8rem 0;
+  background: var(--navy);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(212, 168, 67, 0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+.cta-section .section-title {
+  font-size: clamp(2.5rem, 4.5vw, 3.5rem);
+  max-width: 700px;
+  margin: 0 auto 1.5rem;
+}
+.cta-section .section-subtitle {
+  max-width: 550px;
+  margin: 0 auto 2.5rem;
+}
+
+/* ===== FOOTER ===== */
+footer {
+  padding: 3rem 0;
+  border-top: 1px solid rgba(212, 168, 67, 0.08);
+  background: var(--navy-deep);
+}
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer-copy {
+  font-size: 0.8rem;
+  color: var(--gray);
+}
+.footer-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+}
+.footer-links a {
+  font-size: 0.8rem;
+  color: var(--gray);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.footer-links a:hover { color: var(--gold); }
+.footer-disclaimer {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(212, 168, 67, 0.05);
+  font-size: 0.7rem;
+  color: rgba(138, 153, 171, 0.6);
+  line-height: 1.6;
+  max-width: 800px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .hero-grid { grid-template-columns: 1fr; text-align: center; }
+  .hero-tagline { margin-left: auto; margin-right: auto; }
+  .hero-ctas { justify-content: center; }
+  .hero-stats { justify-content: center; }
+  .hero-visual { display: none; }
+  .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+  .tiers-grid { grid-template-columns: 1fr; }
+  .tier { border-right: none; border-bottom: 1px solid rgba(212, 168, 67, 0.08); }
+  .tier:last-child { border-bottom: none; }
+}
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-toggle { display: flex; }
+  .nav-links.open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    background: rgba(6, 14, 26, 0.98);
+    padding: 2rem;
+    gap: 1.5rem;
+    border-bottom: 1px solid rgba(212, 168, 67, 0.1);
+  }
+  .steps-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .audience-grid { grid-template-columns: 1fr; }
+  .conflict-callout { grid-template-columns: 1fr; text-align: center; }
+  .hero-ctas { flex-direction: column; align-items: center; }
+  .hero-stats { flex-direction: column; gap: 1.5rem; align-items: center; }
+  .footer-inner { flex-direction: column; gap: 1rem; text-align: center; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== NAVIGATION ===== -->
+<nav id="nav">
+  <div class="container nav-inner">
+    <a href="#" class="nav-logo">
+      <svg class="nav-logo-icon" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="512" height="512" rx="64" fill="#0A1628"/>
+        <path d="M256,60 L380,90 L380,280 C380,360 325,420 256,450 C187,420 132,360 132,280 L132,90 Z" fill="#0F2140" stroke="#D4A843" stroke-width="4"/>
+        <line x1="190" y1="230" x2="322" y2="208" stroke="#D4A843" stroke-width="4" stroke-linecap="round"/>
+        <polygon points="256,195 247,215 265,215" fill="#D4A843"/>
+        <line x1="190" y1="230" x2="174" y2="246" stroke="#D4A843" stroke-width="2.5"/>
+        <line x1="190" y1="230" x2="206" y2="246" stroke="#D4A843" stroke-width="2.5"/>
+        <path d="M170,246 Q190,268 210,246" fill="none" stroke="#D4A843" stroke-width="3"/>
+        <line x1="322" y1="208" x2="306" y2="224" stroke="#D4A843" stroke-width="2.5"/>
+        <line x1="322" y1="208" x2="338" y2="224" stroke="#D4A843" stroke-width="2.5"/>
+        <path d="M302,224 Q322,246 342,224" fill="none" stroke="#D4A843" stroke-width="3"/>
+      </svg>
+      <span class="nav-logo-text">INVERITAS</span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#how-it-works">How It Works</a></li>
+      <li><a href="#technology">Technology</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/login.html">Sign In</a></li>
+      <li><a href="/login.html" class="btn btn-gold">Get Started</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="hero-content">
+      <div class="hero-badge">AI-Powered Defense Analysis</div>
+      <h1>Turn the law<br><span class="gold">back on itself.</span></h1>
+      <p class="hero-tagline">Inveritas inverts statutory language across federal, state, and municipal jurisdictions to surface defense vectors invisible to manual review.</p>
+      <div class="hero-ctas">
+        <a href="/login.html" class="btn btn-gold btn-large">Start Your Analysis →</a>
+        <a href="#how-it-works" class="btn btn-outline btn-large">See How It Works</a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="hero-stat-number">3</div>
+          <div class="hero-stat-label">Jurisdiction tiers analyzed</div>
+        </div>
+        <div>
+          <div class="hero-stat-number">90s</div>
+          <div class="hero-stat-label">Average analysis time</div>
+        </div>
+        <div>
+          <div class="hero-stat-number">∞</div>
+          <div class="hero-stat-label">Defense vectors surfaced</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-visual-glow"></div>
+      <svg width="420" height="420" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer shield -->
+        <path d="M210,30 L370,70 L370,240 C370,330 298,395 210,410 C122,395 50,330 50,240 L50,70 Z" fill="rgba(15,33,64,0.4)" stroke="rgba(212,168,67,0.2)" stroke-width="1.5"/>
+        <!-- Inner shield -->
+        <path d="M210,60 L340,92 L340,230 C340,308 280,365 210,378 C140,365 80,308 80,230 L80,92 Z" fill="rgba(10,22,40,0.6)" stroke="rgba(212,168,67,0.12)" stroke-width="1"/>
+        <!-- Balance beam -->
+        <line x1="130" y1="210" x2="290" y2="185" stroke="#D4A843" stroke-width="3" stroke-linecap="round" opacity="0.8">
+          <animateTransform attributeName="transform" type="rotate" values="0 210 200;2 210 200;0 210 200;-2 210 200;0 210 200" dur="6s" repeatCount="indefinite"/>
+        </line>
+        <!-- Fulcrum -->
+        <polygon points="210,175 200,198 220,198" fill="#D4A843" opacity="0.8"/>
+        <!-- Pillar -->
+        <line x1="210" y1="198" x2="210" y2="320" stroke="rgba(212,168,67,0.15)" stroke-width="2"/>
+        <!-- Left pan -->
+        <g opacity="0.7">
+          <line x1="130" y1="210" x2="110" y2="230" stroke="#D4A843" stroke-width="2"/>
+          <line x1="130" y1="210" x2="150" y2="230" stroke="#D4A843" stroke-width="2"/>
+          <path d="M106,230 Q130,256 154,230" fill="none" stroke="#D4A843" stroke-width="2.5"/>
+        </g>
+        <!-- Right pan -->
+        <g opacity="0.7">
+          <line x1="290" y1="185" x2="270" y2="205" stroke="#D4A843" stroke-width="2"/>
+          <line x1="290" y1="185" x2="310" y2="205" stroke="#D4A843" stroke-width="2"/>
+          <path d="M266,205 Q290,231 314,205" fill="none" stroke="#D4A843" stroke-width="2.5"/>
+        </g>
+        <!-- Inversion arrows -->
+        <path d="M168,285 C148,268 148,242 168,225" fill="none" stroke="rgba(212,168,67,0.35)" stroke-width="1.5"/>
+        <polygon points="168,225 164,237 172,235" fill="rgba(212,168,67,0.35)"/>
+        <path d="M252,225 C272,242 272,268 252,285" fill="none" stroke="rgba(212,168,67,0.35)" stroke-width="1.5"/>
+        <polygon points="252,285 256,273 248,275" fill="rgba(212,168,67,0.35)"/>
+        <!-- Floating text labels -->
+        <text x="120" y="270" font-family="DM Sans, sans-serif" font-size="9" fill="rgba(212,168,67,0.4)" letter-spacing="0.1em">STATUTE</text>
+        <text x="270" y="245" font-family="DM Sans, sans-serif" font-size="9" fill="rgba(212,168,67,0.4)" letter-spacing="0.1em">DEFENSE</text>
+        <!-- Tier labels -->
+        <text x="210" y="105" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="8" fill="rgba(212,168,67,0.3)" letter-spacing="0.2em">FEDERAL</text>
+        <text x="210" y="135" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="8" fill="rgba(100,180,255,0.3)" letter-spacing="0.2em">STATE</text>
+        <text x="210" y="165" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="8" fill="rgba(120,220,160,0.3)" letter-spacing="0.2em">MUNICIPAL</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="how-it-works" id="how-it-works">
+  <div class="container">
+    <div class="text-center animate-on-scroll">
+      <div class="section-label">How It Works</div>
+      <h2 class="section-title">Three steps. Ninety seconds.<br>Defense vectors you'd never find manually.</h2>
+      <p class="section-subtitle centered">What takes a paralegal six hours takes Inveritas a minute and a half.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step animate-on-scroll">
+        <div class="step-number">01</div>
+        <h3>Input Your Charge</h3>
+        <p>Enter the jurisdiction, statute, and charge type. Inveritas accepts federal, state, and municipal charges across all 50 states.</p>
+      </div>
+      <div class="step animate-on-scroll">
+        <div class="step-number">02</div>
+        <h3>Statutory Inversion</h3>
+        <p>The engine disassembles the statute's language, definitions, and elements — then systematically inverts each component to identify where the law fails to cover the defendant's conduct.</p>
+      </div>
+      <div class="step animate-on-scroll">
+        <div class="step-number">03</div>
+        <h3>Defense Vectors Delivered</h3>
+        <p>Receive a prioritized report of defense vectors with constitutional challenges, definitional gaps, tier conflicts, procedural violations, and case law citations.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== THREE-TIER TECHNOLOGY ===== -->
+<section class="tiers-section" id="technology">
+  <div class="container">
+    <div class="text-center animate-on-scroll">
+      <div class="section-label">The Competitive Moat</div>
+      <h2 class="section-title">Three-tier jurisdictional analysis.<br>Nobody else does this.</h2>
+      <p class="section-subtitle centered">Every analysis cross-references federal, state, and municipal law simultaneously — and flags conflicts between them.</p>
+    </div>
+    <div class="tiers-grid animate-on-scroll">
+      <div class="tier tier-federal">
+        <span class="tier-badge">Federal</span>
+        <h3>Constitutional &amp; Federal Law</h3>
+        <p>USC, CFR, Constitutional amendments, and Supreme Court precedent analyzed for every charge.</p>
+        <ul class="tier-items">
+          <li>4th/5th/6th Amendment challenges</li>
+          <li>Supremacy Clause conflicts</li>
+          <li>Federal preemption analysis</li>
+          <li>SCOTUS & Circuit precedent</li>
+        </ul>
+      </div>
+      <div class="tier tier-state">
+        <span class="tier-badge">State</span>
+        <h3>State Statutory Law</h3>
+        <p>Penal codes, transportation codes, criminal procedure, and state appellate decisions.</p>
+        <ul class="tier-items">
+          <li>Element-by-element statutory analysis</li>
+          <li>Definitional gap identification</li>
+          <li>Rule of Lenity application</li>
+          <li>State appellate case law</li>
+        </ul>
+      </div>
+      <div class="tier tier-municipal">
+        <span class="tier-badge">Municipal</span>
+        <h3>County &amp; Local Ordinances</h3>
+        <p>Municipal codes, local court procedures, and county-specific penalty schedules.</p>
+        <ul class="tier-items">
+          <li>Local ordinance conflicts</li>
+          <li>Municipal court procedure gaps</li>
+          <li>Charging discretion analysis</li>
+          <li>Penalty schedule discrepancies</li>
+        </ul>
+      </div>
+    </div>
+    <div class="conflict-callout animate-on-scroll">
+      <div class="conflict-icon">⚡</div>
+      <div>
+        <h3>Tier Conflict Detection — The Killer Feature</h3>
+        <p>When laws at different levels contradict each other, Inveritas automatically flags the gap. A local ordinance can't create a lesser penalty than state law — when a municipal court charges under a local ordinance but the state statute has a more favorable provision, that's a defense vector most attorneys miss entirely.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRICING ===== -->
+<section class="pricing-section" id="pricing">
+  <div class="container">
+    <div class="text-center animate-on-scroll">
+      <div class="section-label">Pricing</div>
+      <h2 class="section-title">The prosecution has a team.<br>Now you do too.</h2>
+      <p class="section-subtitle centered">From single-case analysis to unlimited firm access.</p>
+    </div>
+    <div class="pricing-grid animate-on-scroll">
+      <div class="price-card">
+        <div class="price-tier-name">Single Analysis</div>
+        <div class="price-amount">$29</div>
+        <div class="price-desc">Per case. No subscription required.</div>
+        <ul class="price-features">
+          <li>One full three-tier analysis</li>
+          <li>All defense vectors identified</li>
+          <li>Tier conflict detection</li>
+          <li>Downloadable report</li>
+          <li>Case law citations included</li>
+        </ul>
+        <button class="btn btn-outline" onclick="checkout('single')" style="width:100%;justify-content:center">Buy Analysis — $29</button>
+      </div>
+      <div class="price-card featured">
+        <div class="price-tier-name">Practitioner</div>
+        <div class="price-amount">$297<span>/mo</span></div>
+        <div class="price-desc">For solo attorneys. 50 analyses/month.</div>
+        <ul class="price-features">
+          <li>50 analyses per month</li>
+          <li>Priority processing</li>
+          <li>Saved case history</li>
+          <li>Export to case management</li>
+          <li>Email support</li>
+        </ul>
+        <button class="btn btn-gold" onclick="checkout('practitioner')" style="width:100%;justify-content:center">Subscribe — $297/mo</button>
+      </div>
+      <div class="price-card">
+        <div class="price-tier-name">Firm</div>
+        <div class="price-amount">$497<span>/seat/mo</span></div>
+        <div class="price-desc">For teams. Unlimited analyses.</div>
+        <ul class="price-features">
+          <li>Unlimited analyses</li>
+          <li>Team dashboard & sharing</li>
+          <li>Clio / MyCase integration</li>
+          <li>Custom report branding</li>
+          <li>Priority phone support</li>
+        </ul>
+        <button class="btn btn-outline" onclick="checkout('firm')" style="width:100%;justify-content:center">Subscribe — $497/seat/mo</button>
+      </div>
+      <div class="price-card">
+        <div class="price-tier-name">Enterprise</div>
+        <div class="price-amount">Custom</div>
+        <div class="price-desc">For public defenders & legal aid orgs.</div>
+        <ul class="price-features">
+          <li>Unlimited users & analyses</li>
+          <li>Dedicated onboarding</li>
+          <li>API access</li>
+          <li>Custom jurisdiction modules</li>
+          <li>SLA & compliance support</li>
+        </ul>
+        <a href="#cta" class="btn btn-outline">Talk to Us</a>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:2.5rem;padding:2rem;border:1px solid rgba(212,168,67,.1);border-radius:4px;background:rgba(15,33,64,.3)">
+      <p style="font-size:.95rem;color:var(--gray-light);margin-bottom:.5rem">Don't want to commit yet?</p>
+      <p style="font-size:.85rem;color:var(--gray);margin-bottom:1.25rem">Create a free account and run your first analysis — see partial results before you buy.</p>
+      <a href="/login.html" class="btn btn-outline" style="margin-right:1rem">Create Free Account</a>
+      <a href="/login.html?student=true" class="btn btn-outline" style="border-color:rgba(93,232,160,.3);color:var(--green)">🎓 I'm a Law Student — Get Free Access</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== AUDIENCE ===== -->
+<section class="audience-section">
+  <div class="container">
+    <div class="text-center animate-on-scroll">
+      <div class="section-label">Built For</div>
+      <h2 class="section-title">Defense doesn't sleep. Neither does Inveritas.</h2>
+    </div>
+    <div class="audience-grid animate-on-scroll">
+      <div class="audience-card">
+        <div class="audience-icon">⚖️</div>
+        <h3>Criminal Defense Attorneys</h3>
+        <p>Surface defense vectors in 90 seconds that would take your paralegal 6 hours. Every statutory element, every definitional gap, every constitutional challenge — automatically.</p>
+      </div>
+      <div class="audience-card">
+        <div class="audience-icon">🛡️</div>
+        <h3>Pro Se Defendants</h3>
+        <p>Representing yourself? Inveritas gives you the same statutory analysis a $500/hour attorney would produce. Enter your charge, get your defense.</p>
+      </div>
+      <div class="audience-card">
+        <div class="audience-icon">🏛️</div>
+        <h3>Public Defender Offices</h3>
+        <p>300 cases per attorney? Force-multiply your entire office. Institutional licensing means every defender gets AI-powered analysis on every case.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FINAL CTA ===== -->
+<section class="cta-section" id="cta">
+  <div class="container">
+    <div class="section-label">Get Started</div>
+    <h2 class="section-title">Your statute.<br><span class="gold">Your defense.</span></h2>
+    <p class="section-subtitle centered">Enter your charge, jurisdiction, and circumstances. Inveritas does the rest in 90 seconds.</p>
+    <div style="margin-top: 2rem;">
+      <a href="/login.html" class="btn btn-gold btn-large" id="ctaButton">Start Your Analysis →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-copy">© 2026 Inveritas. All rights reserved.</div>
+      <ul class="footer-links">
+        <li><a href="/privacy.html">Privacy</a></li>
+        <li><a href="/terms.html">Terms</a></li>
+        <li><a href="/cookies.html">Cookies</a></li>
+        <li><a href="mailto:legal@inveritaslaw.com">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-disclaimer">
+      Inveritas is a legal research and analysis tool. It does not constitute legal advice, create an attorney-client relationship, or substitute for the judgment of a licensed attorney. All analysis should be reviewed by a qualified legal professional before use in any legal proceeding. Results may vary by jurisdiction and case specifics.
+    </div>
+  </div>
+</footer>
+
+<script>
+// Nav scroll effect
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// Mobile toggle
+const toggle = document.getElementById('navToggle');
+const links = document.getElementById('navLinks');
+toggle.addEventListener('click', () => links.classList.toggle('open'));
+
+// Scroll animations
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', (e) => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      links.classList.remove('open');
+    }
+  });
+});
+// Stripe Checkout
+async function checkout(tier) {
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.textContent = 'Redirecting...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier })
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      alert('Checkout error: ' + data.error);
+      btn.textContent = originalText;
+      btn.disabled = false;
+      return;
+    }
+
+    // Redirect to Stripe Checkout
+    window.location.href = data.url;
+  } catch (err) {
+    alert('Connection error. Please try again.');
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+</script>
+
+<!-- CONSENT BANNER -->
+<style>
+.consent-banner{position:fixed;bottom:0;left:0;right:0;z-index:10001;background:rgba(10,22,40,0.98);border-top:1px solid rgba(212,168,67,.2);padding:1.5rem 2rem;backdrop-filter:blur(20px);animation:consentUp .4s ease both}
+@keyframes consentUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.consent-inner{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:2rem;flex-wrap:wrap}
+.consent-text{flex:1;min-width:300px;font-size:.82rem;color:var(--gray-light);line-height:1.6}
+.consent-text a{color:var(--gold);text-decoration:underline}
+.consent-btns{display:flex;gap:.75rem;flex-shrink:0}
+.consent-btn{padding:.6rem 1.5rem;font-family:var(--font-body);font-size:.8rem;font-weight:600;border-radius:3px;border:none;cursor:pointer;transition:all .3s}
+.consent-accept{background:var(--gold);color:var(--navy-deep)}
+.consent-accept:hover{background:var(--gold-light)}
+.consent-reject{background:transparent;color:var(--gray);border:1px solid rgba(212,168,67,.2)}
+.consent-reject:hover{color:var(--gold);border-color:var(--gold)}
+@media(max-width:768px){.consent-inner{flex-direction:column;text-align:center}.consent-btns{justify-content:center}}
+</style>
+<div class="consent-banner" id="consentBanner" style="display:none">
+  <div class="consent-inner">
+    <div class="consent-text">
+      This site uses cookies and collects data (IP address, browser, device information) to operate and improve the service. By clicking "Accept All," you agree to our
+      <a href="/terms.html" target="_blank">Terms of Service</a>,
+      <a href="/privacy.html" target="_blank">Privacy Policy</a>, and
+      <a href="/cookies.html" target="_blank">Cookie Policy</a>, including the collection and use of your data as described therein.
+    </div>
+    <div class="consent-btns">
+      <button class="consent-btn consent-reject" onclick="rejectConsent()">Essential Only</button>
+      <button class="consent-btn consent-accept" onclick="acceptConsent()">Accept All</button>
+    </div>
+  </div>
+</div>
+<script>
+// Show consent banner if not yet accepted
+if (!localStorage.getItem('inveritas_consent')) {
+  document.getElementById('consentBanner').style.display = 'block';
+}
+function acceptConsent() {
+  localStorage.setItem('inveritas_consent', JSON.stringify({ type: 'all', ts: new Date().toISOString() }));
+  document.getElementById('consentBanner').style.display = 'none';
+  fetch('/api/log-event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event: 'consent_accept_all', metadata: { version: '2026-03-29', page: 'home' } }) }).catch(() => {});
+}
+function rejectConsent() {
+  localStorage.setItem('inveritas_consent', JSON.stringify({ type: 'essential', ts: new Date().toISOString() }));
+  document.getElementById('consentBanner').style.display = 'none';
+  fetch('/api/log-event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event: 'consent_essential_only', metadata: { version: '2026-03-29', page: 'home' } }) }).catch(() => {});
+}
+</script>
+
+</body>
+</html>

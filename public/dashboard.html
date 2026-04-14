@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inveritas — Dashboard</title>
+<meta name="description" content="Manage your legal defense cases, evidence, and analyses.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy-deep:#060E1A;--navy:#0A1628;--navy-mid:#0F2140;--navy-light:#1A3158;
+  --gold:#D4A843;--gold-light:#E8C76A;--gold-dark:#B8912E;--gold-muted:rgba(212,168,67,0.15);
+  --white:#F2F0ED;--white-pure:#FFF;--gray:#8A99AB;--gray-light:#C5CDD8;
+  --red:#E85D5D;--green:#5DE8A0;--blue:#64B4FF;--purple:#B464FF;
+  --font-display:'Cormorant Garamond',Georgia,serif;
+  --font-body:'DM Sans',-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--navy-deep);color:var(--white);font-family:var(--font-body);font-weight:400;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
+
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:rgba(6,14,26,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,168,67,0.08)}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:.75rem;text-decoration:none}
+.nav-logo-text{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--white);letter-spacing:.08em}
+.nav-links{display:flex;align-items:center;gap:2rem;list-style:none}
+.nav-links a,.nav-links button{color:var(--gray);text-decoration:none;font-size:.85rem;font-weight:500;letter-spacing:.04em;transition:color .3s;background:none;border:none;cursor:pointer;font-family:var(--font-body)}
+.nav-links a:hover,.nav-links button:hover{color:var(--gold)}
+.nav-links a.active{color:var(--gold)}
+
+.container{max-width:1200px;margin:0 auto;padding:0 2rem}
+.page-wrap{padding-top:5rem;min-height:100vh;padding-bottom:4rem}
+
+/* Dashboard Layout */
+.dash-header{padding:2rem 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.dash-header h1{font-family:var(--font-display);font-size:2rem;font-weight:600;color:var(--white-pure)}
+.dash-header-actions{display:flex;gap:.75rem}
+
+/* Stats Row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.stat-card{background:rgba(15,33,64,0.4);border:1px solid rgba(212,168,67,0.08);border-radius:4px;padding:1.5rem}
+.stat-value{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--gold);line-height:1}
+.stat-label{font-size:.75rem;color:var(--gray);margin-top:.25rem;letter-spacing:.04em}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid rgba(212,168,67,0.1);margin-bottom:2rem}
+.tab{padding:.75rem 1.5rem;font-size:.85rem;font-weight:600;color:var(--gray);cursor:pointer;border-bottom:2px solid transparent;transition:all .3s;letter-spacing:.04em}
+.tab:hover{color:var(--gold-light)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.7rem 1.5rem;font-family:var(--font-body);font-size:.85rem;font-weight:600;letter-spacing:.04em;text-decoration:none;border-radius:3px;border:none;cursor:pointer;transition:all .3s}
+.btn-gold{background:var(--gold);color:var(--navy-deep)}
+.btn-gold:hover{background:var(--gold-light);transform:translateY(-1px);box-shadow:0 8px 30px rgba(212,168,67,.3)}
+.btn-outline{background:transparent;color:var(--gold);border:1px solid rgba(212,168,67,.3)}
+.btn-outline:hover{border-color:var(--gold);background:var(--gold-muted)}
+.btn-sm{padding:.5rem 1rem;font-size:.78rem}
+.btn-red{background:rgba(232,93,93,.15);color:var(--red);border:1px solid rgba(232,93,93,.3)}
+.btn-red:hover{background:rgba(232,93,93,.25)}
+
+/* Cases List */
+.cases-grid{display:flex;flex-direction:column;gap:1rem}
+.case-card{background:rgba(15,33,64,0.3);border:1px solid rgba(212,168,67,0.06);border-radius:4px;padding:1.5rem;transition:all .3s;cursor:pointer}
+.case-card:hover{border-color:rgba(212,168,67,.2);background:rgba(15,33,64,0.5)}
+.case-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem}
+.case-number{font-family:var(--font-mono);font-size:.7rem;color:var(--gold-dark);letter-spacing:.08em}
+.case-status{display:inline-block;padding:.15rem .5rem;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border-radius:2px}
+.status-active{background:rgba(93,232,160,.1);color:var(--green)}
+.status-pending{background:rgba(212,168,67,.1);color:var(--gold)}
+.status-closed{background:rgba(138,153,171,.1);color:var(--gray)}
+.status-archived{background:rgba(138,153,171,.05);color:rgba(138,153,171,.5)}
+.case-title{font-family:var(--font-display);font-size:1.2rem;font-weight:600;color:var(--white-pure);margin-bottom:.25rem}
+.case-charge{font-size:.85rem;color:var(--gray-light);margin-bottom:.75rem}
+.case-meta{display:flex;gap:2rem;font-size:.75rem;color:var(--gray)}
+.case-meta span{display:flex;align-items:center;gap:.3rem}
+
+/* Case Detail */
+.case-detail{background:rgba(15,33,64,0.3);border:1px solid rgba(212,168,67,0.08);border-radius:4px;padding:2rem;margin-bottom:1.5rem}
+.case-detail h2{font-family:var(--font-display);font-size:1.6rem;font-weight:600;color:var(--white-pure);margin-bottom:1rem}
+.case-info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem}
+.case-info-item label{display:block;font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:.2rem}
+.case-info-item .val{font-size:.9rem;color:var(--gray-light)}
+
+/* Evidence section */
+.evidence-list{display:flex;flex-direction:column;gap:.75rem}
+.evidence-item{background:rgba(6,14,26,.5);border:1px solid rgba(212,168,67,.06);border-radius:3px;padding:1rem 1.25rem;display:flex;justify-content:space-between;align-items:center}
+.evidence-item-info{flex:1}
+.evidence-item-title{font-size:.9rem;color:var(--white-pure);font-weight:500}
+.evidence-item-meta{font-size:.75rem;color:var(--gray);margin-top:.15rem}
+.evidence-type-badge{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .5rem;border-radius:2px;background:rgba(100,180,255,.1);color:var(--blue)}
+
+/* Analysis versions */
+.analysis-version{background:rgba(6,14,26,.5);border:1px solid rgba(212,168,67,.06);border-radius:3px;padding:1.25rem;margin-bottom:.75rem;cursor:pointer;transition:all .3s}
+.analysis-version:hover{border-color:rgba(212,168,67,.2)}
+.analysis-version-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+.analysis-version-label{font-family:var(--font-mono);font-size:.78rem;color:var(--gold)}
+.analysis-version-date{font-size:.75rem;color:var(--gray)}
+.analysis-version-reason{font-size:.75rem;color:var(--blue);background:rgba(100,180,255,.08);padding:.1rem .4rem;border-radius:2px}
+.analysis-vectors{font-size:.85rem;color:var(--gray-light)}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(6,14,26,0.85);z-index:5000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--navy-mid);border:1px solid rgba(212,168,67,0.15);border-radius:4px;padding:2.5rem;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;position:relative}
+.modal h2{font-family:var(--font-display);font-size:1.5rem;font-weight:600;color:var(--white-pure);margin-bottom:1.5rem}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--gray);font-size:1.2rem;cursor:pointer}
+.modal-close:hover{color:var(--gold)}
+
+/* Forms */
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:.4rem}
+.form-input,.form-select,.form-textarea{width:100%;background:rgba(6,14,26,0.8);border:1px solid rgba(212,168,67,0.12);border-radius:3px;padding:.75rem 1rem;color:var(--white);font-family:var(--font-body);font-size:.9rem;transition:border-color .3s;outline:none}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold)}
+.form-select{cursor:pointer;appearance:none}
+.form-textarea{min-height:100px;resize:vertical;line-height:1.6}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+
+/* Subscription card */
+.sub-card{background:rgba(15,33,64,0.4);border:1px solid rgba(212,168,67,0.15);border-radius:4px;padding:2rem;margin-bottom:1.5rem}
+.sub-tier{font-family:var(--font-display);font-size:1.8rem;font-weight:600;color:var(--gold);margin-bottom:.5rem}
+.sub-usage{font-size:.9rem;color:var(--gray-light)}
+.sub-progress{width:100%;height:6px;background:rgba(212,168,67,.1);border-radius:3px;margin-top:.75rem;overflow:hidden}
+.sub-progress-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .5s ease}
+
+/* Empty state */
+.empty-state{text-align:center;padding:4rem 2rem}
+.empty-state h3{font-family:var(--font-display);font-size:1.4rem;color:var(--white-pure);margin-bottom:.5rem}
+.empty-state p{color:var(--gray);margin-bottom:1.5rem;font-size:.9rem}
+
+/* Toast */
+.toast{position:fixed;bottom:2rem;right:2rem;padding:.75rem 1.5rem;background:var(--gold);color:var(--navy-deep);font-size:.85rem;font-weight:600;border-radius:3px;z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.error{background:var(--red);color:var(--white)}
+
+/* Footer */
+.site-footer{border-top:1px solid rgba(212,168,67,.06);padding:3rem 0 2rem;margin-top:4rem}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:2rem}
+.footer-brand .footer-logo{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;text-decoration:none}
+.footer-brand .footer-logo-text{font-family:var(--font-display);font-size:1.2rem;font-weight:600;color:var(--white);letter-spacing:.08em}
+.footer-brand p{font-size:.8rem;color:var(--gray);line-height:1.6;max-width:280px}
+.footer-col h4{font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem}
+.footer-col a{display:block;font-size:.82rem;color:var(--gray);text-decoration:none;margin-bottom:.5rem;transition:color .3s}
+.footer-col a:hover{color:var(--gold)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:1.5rem;border-top:1px solid rgba(212,168,67,.05)}
+.footer-copy{font-size:.75rem;color:rgba(138,153,171,.5)}
+.footer-disclaimer{font-size:.68rem;color:rgba(138,153,171,.4);line-height:1.6;max-width:800px;margin-top:1rem}
+
+/* Loading spinner */
+.spinner{width:32px;height:32px;border:3px solid rgba(212,168,67,.15);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:2rem auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Responsive */
+@media(max-width:768px){
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .case-info-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .footer-grid{grid-template-columns:1fr}
+  .dash-header{flex-direction:column;text-align:center}
+  .nav-links{display:none}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <svg width="32" height="32" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" rx="64" fill="#0A1628"/><path d="M256,60 L380,90 L380,280 C380,360 325,420 256,450 C187,420 132,360 132,280 L132,90 Z" fill="#0F2140" stroke="#D4A843" stroke-width="4"/><line x1="190" y1="230" x2="322" y2="208" stroke="#D4A843" stroke-width="4" stroke-linecap="round"/><polygon points="256,195 247,215 265,215" fill="#D4A843"/><path d="M170,246 Q190,268 210,246" fill="none" stroke="#D4A843" stroke-width="3"/><path d="M302,224 Q322,246 342,224" fill="none" stroke="#D4A843" stroke-width="3"/></svg>
+      <span class="nav-logo-text">INVERITAS</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/dashboard.html" class="active">Dashboard</a></li>
+      <li><a href="/analyze.html">Analysis Engine</a></li>
+      <li><a href="/blog.html">Blog</a></li>
+      <li><button id="logoutBtn" onclick="doLogout()">Sign Out</button></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="container">
+    <!-- Loading state -->
+    <div id="loadingState"><div class="spinner"></div></div>
+
+    <!-- Auth gate -->
+    <div id="authGate" style="display:none;text-align:center;padding:6rem 2rem">
+      <h2 style="font-family:var(--font-display);font-size:1.8rem;color:var(--white-pure);margin-bottom:1rem">Sign in to access your dashboard</h2>
+      <a href="/login.html" class="btn btn-gold">Sign In →</a>
+    </div>
+
+    <!-- Dashboard content -->
+    <div id="dashContent" style="display:none">
+      <div class="dash-header">
+        <div>
+          <h1>Dashboard</h1>
+          <div style="font-size:.85rem;color:var(--gray)" id="userEmail"></div>
+        </div>
+        <div class="dash-header-actions">
+          <button class="btn btn-gold" onclick="openNewCaseModal()">+ New Case</button>
+          <a href="/analyze.html" class="btn btn-outline">Quick Analysis</a>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="statCases">0</div>
+          <div class="stat-label">Active Cases</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statAnalyses">0</div>
+          <div class="stat-label">Analyses Run</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statEvidence">0</div>
+          <div class="stat-label">Evidence Items</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statUsage">0/50</div>
+          <div class="stat-label">Monthly Usage</div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('cases')">My Cases</div>
+        <div class="tab" onclick="switchTab('subscription')">Subscription</div>
+        <div class="tab" onclick="switchTab('account')">Account</div>
+      </div>
+
+      <!-- Cases Tab -->
+      <div class="tab-panel active" id="panel-cases">
+        <div id="casesList"><div class="spinner"></div></div>
+      </div>
+
+      <!-- Subscription Tab -->
+      <div class="tab-panel" id="panel-subscription">
+        <div id="subInfo"><div class="spinner"></div></div>
+      </div>
+
+      <!-- Account Tab -->
+      <div class="tab-panel" id="panel-account">
+        <div class="case-detail">
+          <h2>Account Settings</h2>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="text" class="form-input" id="accountEmail" disabled>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Member Since</label>
+            <input type="text" class="form-input" id="accountCreated" disabled>
+          </div>
+          <div style="margin-top:1.5rem">
+            <button class="btn btn-outline" onclick="changePassword()">Change Password</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Case Detail View -->
+    <div id="caseDetail" style="display:none">
+      <div style="margin-bottom:1.5rem">
+        <button class="btn btn-outline btn-sm" onclick="backToCases()">← Back to Cases</button>
+      </div>
+      <div id="caseDetailContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- New Case Modal -->
+<div class="modal-overlay" id="newCaseModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('newCaseModal')">&times;</button>
+    <h2>Create New Case</h2>
+    <div class="form-group">
+      <label class="form-label">Case Title *</label>
+      <input type="text" class="form-input" id="newCaseTitle" placeholder="e.g. DWI - Williamson County">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">State</label>
+        <select class="form-select" id="newCaseState">
+          <option value="">Select state...</option>
+          <option value="Alabama">Alabama</option><option value="Alaska">Alaska</option><option value="Arizona">Arizona</option><option value="Arkansas">Arkansas</option><option value="California">California</option><option value="Colorado">Colorado</option><option value="Connecticut">Connecticut</option><option value="Delaware">Delaware</option><option value="Florida">Florida</option><option value="Georgia">Georgia</option><option value="Hawaii">Hawaii</option><option value="Idaho">Idaho</option><option value="Illinois">Illinois</option><option value="Indiana">Indiana</option><option value="Iowa">Iowa</option><option value="Kansas">Kansas</option><option value="Kentucky">Kentucky</option><option value="Louisiana">Louisiana</option><option value="Maine">Maine</option><option value="Maryland">Maryland</option><option value="Massachusetts">Massachusetts</option><option value="Michigan">Michigan</option><option value="Minnesota">Minnesota</option><option value="Mississippi">Mississippi</option><option value="Missouri">Missouri</option><option value="Montana">Montana</option><option value="Nebraska">Nebraska</option><option value="Nevada">Nevada</option><option value="New Hampshire">New Hampshire</option><option value="New Jersey">New Jersey</option><option value="New Mexico">New Mexico</option><option value="New York">New York</option><option value="North Carolina">North Carolina</option><option value="North Dakota">North Dakota</option><option value="Ohio">Ohio</option><option value="Oklahoma">Oklahoma</option><option value="Oregon">Oregon</option><option value="Pennsylvania">Pennsylvania</option><option value="Rhode Island">Rhode Island</option><option value="South Carolina">South Carolina</option><option value="South Dakota">South Dakota</option><option value="Tennessee">Tennessee</option><option value="Texas" selected>Texas</option><option value="Utah">Utah</option><option value="Vermont">Vermont</option><option value="Virginia">Virginia</option><option value="Washington">Washington</option><option value="West Virginia">West Virginia</option><option value="Wisconsin">Wisconsin</option><option value="Wyoming">Wyoming</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">County / City</label>
+        <input type="text" class="form-input" id="newCaseCounty" placeholder="e.g. Williamson County">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Charge</label>
+      <input type="text" class="form-input" id="newCaseCharge" placeholder="e.g. DWI, Speeding, Assault">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Case Type</label>
+      <select class="form-select" id="newCaseType">
+        <option value="criminal">Criminal</option>
+        <option value="traffic">Traffic</option>
+        <option value="municipal">Municipal</option>
+        <option value="civil">Civil</option>
+        <option value="federal">Federal</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description / Circumstances</label>
+      <textarea class="form-textarea" id="newCaseDesc" placeholder="Describe what happened..."></textarea>
+    </div>
+    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeModal('newCaseModal')">Cancel</button>
+      <button class="btn btn-gold" id="createCaseBtn" onclick="createCase()">Create Case</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Evidence Modal -->
+<div class="modal-overlay" id="addEvidenceModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addEvidenceModal')">&times;</button>
+    <h2>Add Evidence</h2>
+    <div class="form-group">
+      <label class="form-label">Evidence Title *</label>
+      <input type="text" class="form-input" id="evTitle" placeholder="e.g. Dashcam Video, Police Report">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Evidence Type</label>
+        <select class="form-select" id="evType">
+          <option value="document">Document</option>
+          <option value="photo">Photo</option>
+          <option value="video">Video</option>
+          <option value="audio">Audio</option>
+          <option value="police_report">Police Report</option>
+          <option value="witness_statement">Witness Statement</option>
+          <option value="medical_record">Medical Record</option>
+          <option value="financial_record">Financial Record</option>
+          <option value="correspondence">Correspondence</option>
+          <option value="court_filing">Court Filing</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Source</label>
+        <input type="text" class="form-input" id="evSource" placeholder="e.g. Officer body cam, client">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="evDesc" placeholder="Describe this evidence and its relevance..." style="min-height:80px"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Upload File (optional, max 50MB)</label>
+      <input type="file" id="evFile" class="form-input" style="padding:.5rem">
+    </div>
+    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeModal('addEvidenceModal')">Cancel</button>
+      <button class="btn btn-gold" id="addEvBtn" onclick="addEvidence()">Add Evidence</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="/" class="footer-logo">
+          <svg width="28" height="28" viewBox="0 0 512 512" fill="none"><rect width="512" height="512" rx="64" fill="#0A1628"/><path d="M256,60 L380,90 L380,280 C380,360 325,420 256,450 C187,420 132,360 132,280 L132,90 Z" fill="#0F2140" stroke="#D4A843" stroke-width="4"/><line x1="190" y1="230" x2="322" y2="208" stroke="#D4A843" stroke-width="4" stroke-linecap="round"/><polygon points="256,195 247,215 265,215" fill="#D4A843"/><path d="M170,246 Q190,268 210,246" fill="none" stroke="#D4A843" stroke-width="3"/><path d="M302,224 Q322,246 342,224" fill="none" stroke="#D4A843" stroke-width="3"/></svg>
+          <span class="footer-logo-text">INVERITAS</span>
+        </a>
+        <p>AI-powered statutory inversion across federal, state, and municipal jurisdictions. Turn the law back on itself.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="/analyze.html">Analysis Engine</a>
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/#pricing">Pricing</a>
+        <a href="/blog.html">Blog</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="/#how-it-works">How It Works</a>
+        <a href="/#technology">Technology</a>
+        <a href="mailto:travis@inveritaslaw.com">Contact</a>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="/terms.html">Terms of Service</a>
+        <a href="/privacy.html">Privacy Policy</a>
+        <a href="/cookies.html">Cookie Policy</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">&copy; 2026 Inveritas. All rights reserved.</div>
+    </div>
+    <div class="footer-disclaimer">
+      Inveritas is a legal research and analysis tool. It does not constitute legal advice, create an attorney-client relationship, or substitute for the judgment of a licensed attorney. All analysis is AI-generated and should be reviewed by a qualified legal professional before use in any legal proceeding. Results may vary by jurisdiction. Inveritas is not a law firm.
+    </div>
+  </div>
+</footer>
+
+<script>
+var SUPABASE_URL = 'https://dmkuskjfvnniqpjmlnmz.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRta3Vza2pmdm5uaXFwam1sbm16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NzcwMzIsImV4cCI6MjA5MDM1MzAzMn0.F7vzx6RwdnpT9DB1LT1y5uP9WXdWNpcytwSFFsv7D4o';
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var currentSession = null;
+var currentCaseId = null;
+var currentAnalyses = [];
+var casesData = [];
+
+// Auth check
+(async function() {
+  var result = await sb.auth.getSession();
+  var session = result.data.session;
+
+  document.getElementById('loadingState').style.display = 'none';
+
+  if (!session) {
+    document.getElementById('authGate').style.display = 'block';
+    return;
+  }
+
+  currentSession = session;
+  document.getElementById('dashContent').style.display = 'block';
+  document.getElementById('userEmail').textContent = session.user.email;
+  document.getElementById('accountEmail').value = session.user.email;
+  document.getElementById('accountCreated').value = new Date(session.user.created_at).toLocaleDateString();
+
+  loadCases();
+  loadSubscription();
+})();
+
+function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + currentSession.access_token
+  };
+}
+
+function showToast(msg, isError) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+
+// ===== TABS =====
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelector('.tab-panel#panel-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ===== CASES =====
+async function loadCases() {
+  try {
+    var r = await fetch('/api/cases', { headers: authHeaders() });
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+
+    casesData = data.cases || [];
+
+    // Update stats
+    var active = casesData.filter(function(c) { return c.status === 'active'; }).length;
+    var totalAnalyses = 0;
+    var totalEvidence = 0;
+    casesData.forEach(function(c) {
+      totalAnalyses += c.analysis_count || 0;
+      totalEvidence += c.evidence_count || 0;
+    });
+    document.getElementById('statCases').textContent = active;
+    document.getElementById('statAnalyses').textContent = totalAnalyses;
+    document.getElementById('statEvidence').textContent = totalEvidence;
+
+    renderCasesList();
+  } catch (err) {
+    document.getElementById('casesList').innerHTML = '<div class="empty-state"><p style="color:var(--red)">Failed to load cases: ' + esc(err.message) + '</p></div>';
+  }
+}
+
+function renderCasesList() {
+  var el = document.getElementById('casesList');
+  if (casesData.length === 0) {
+    el.innerHTML = '<div class="empty-state"><h3>No cases yet</h3><p>Create your first case to start tracking your legal defense.</p><button class="btn btn-gold" onclick="openNewCaseModal()">+ Create First Case</button></div>';
+    return;
+  }
+
+  var html = '<div class="cases-grid">';
+  casesData.forEach(function(c) {
+    var statusCls = 'status-' + (c.status || 'active');
+    html += '<div class="case-card" onclick="openCase(\'' + c.id + '\')">' +
+      '<div class="case-card-top"><span class="case-number">' + esc(c.case_number) + '</span><span class="case-status ' + statusCls + '">' + esc(c.status) + '</span></div>' +
+      '<div class="case-title">' + esc(c.title) + '</div>' +
+      (c.charge ? '<div class="case-charge">' + esc(c.charge) + ' — ' + esc(c.state) + '</div>' : '') +
+      '<div class="case-meta">' +
+        '<span>' + (c.analysis_count || 0) + ' analyses</span>' +
+        '<span>' + (c.evidence_count || 0) + ' evidence</span>' +
+        '<span>' + new Date(c.created_at).toLocaleDateString() + '</span>' +
+      '</div></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ===== CASE DETAIL =====
+async function openCase(caseId) {
+  currentCaseId = caseId;
+  document.getElementById('dashContent').style.display = 'none';
+  document.getElementById('caseDetail').style.display = 'block';
+  document.getElementById('caseDetailContent').innerHTML = '<div class="spinner"></div>';
+
+  try {
+    var r = await fetch('/api/cases?id=' + caseId, { headers: authHeaders() });
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+
+    renderCaseDetail(data);
+  } catch (err) {
+    document.getElementById('caseDetailContent').innerHTML = '<p style="color:var(--red)">Failed to load case: ' + esc(err.message) + '</p>';
+  }
+}
+
+function renderCaseDetail(data) {
+  var c = data.case;
+  var analyses = data.analyses || [];
+  var evidence = data.evidence || [];
+  currentAnalyses = analyses;
+
+  var html = '<div class="case-detail">' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem">' +
+      '<div><div class="case-number" style="margin-bottom:.25rem">' + esc(c.case_number) + '</div>' +
+      '<h2 style="margin-bottom:0">' + esc(c.title) + '</h2></div>' +
+      '<span class="case-status status-' + (c.status || 'active') + '">' + esc(c.status) + '</span>' +
+    '</div>' +
+    '<div class="case-info-grid">' +
+      '<div class="case-info-item"><label>Charge</label><div class="val">' + esc(c.charge || 'Not specified') + '</div></div>' +
+      '<div class="case-info-item"><label>State</label><div class="val">' + esc(c.state || 'Not specified') + '</div></div>' +
+      '<div class="case-info-item"><label>County</label><div class="val">' + esc(c.county || 'Not specified') + '</div></div>' +
+      '<div class="case-info-item"><label>Court</label><div class="val">' + esc(c.court || 'Not specified') + '</div></div>' +
+      '<div class="case-info-item"><label>Type</label><div class="val">' + esc(c.case_type || 'criminal') + '</div></div>' +
+      '<div class="case-info-item"><label>Created</label><div class="val">' + new Date(c.created_at).toLocaleDateString() + '</div></div>' +
+    '</div>' +
+    (c.description ? '<div style="margin-top:1rem"><label class="form-label">Description</label><p style="font-size:.88rem;color:var(--gray-light);line-height:1.7">' + esc(c.description) + '</p></div>' : '') +
+  '</div>';
+
+  // Evidence Section
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin:2rem 0 1rem">' +
+    '<h3 style="font-family:var(--font-display);font-size:1.3rem;color:var(--white-pure)">Evidence (' + evidence.length + ')</h3>' +
+    '<button class="btn btn-outline btn-sm" onclick="openAddEvidenceModal()">+ Add Evidence</button>' +
+  '</div>';
+
+  if (evidence.length === 0) {
+    html += '<div class="empty-state" style="padding:2rem"><p>No evidence added yet. Add evidence to strengthen your case analysis.</p></div>';
+  } else {
+    html += '<div class="evidence-list">';
+    evidence.forEach(function(ev) {
+      html += '<div class="evidence-item">' +
+        '<div class="evidence-item-info">' +
+          '<div class="evidence-item-title">' + esc(ev.title) + '</div>' +
+          '<div class="evidence-item-meta">' +
+            '<span class="evidence-type-badge">' + esc(ev.evidence_type) + '</span>' +
+            (ev.source ? ' &middot; Source: ' + esc(ev.source) : '') +
+            ' &middot; Added ' + new Date(ev.created_at).toLocaleDateString() +
+          '</div>' +
+        '</div>' +
+        (ev.file_name ? '<span style="font-size:.75rem;color:var(--gray)">' + esc(ev.file_name) + '</span>' : '') +
+      '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Analysis Versions
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin:2rem 0 1rem">' +
+    '<h3 style="font-family:var(--font-display);font-size:1.3rem;color:var(--white-pure)">Analysis History (' + analyses.length + ')</h3>' +
+    '<button class="btn btn-gold btn-sm" onclick="reanalyzeCase()">Run New Analysis</button>' +
+  '</div>';
+
+  if (analyses.length === 0) {
+    html += '<div class="empty-state" style="padding:2rem"><p>No analyses yet. Run the first analysis to generate defense vectors.</p><button class="btn btn-gold" onclick="reanalyzeCase()">Run Analysis</button></div>';
+  } else {
+    analyses.forEach(function(a) {
+      var res = a.result;
+      if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) { res = null; } }
+      var vectors = (res && res.inversion_vectors && Array.isArray(res.inversion_vectors)) ? res.inversion_vectors.length : 0;
+      var conflicts = (res && res.tier_conflict_opportunities && Array.isArray(res.tier_conflict_opportunities)) ? res.tier_conflict_opportunities.length : 0;
+      html += '<div class="analysis-version" onclick="viewAnalysis(\'' + a.id + '\')">' +
+        '<div class="analysis-version-top">' +
+          '<span class="analysis-version-label">Version ' + a.version + '</span>' +
+          '<span class="analysis-version-reason">' + esc(a.trigger_reason) + '</span>' +
+        '</div>' +
+        '<div class="analysis-version-date">' + new Date(a.created_at).toLocaleString() + '</div>' +
+        '<div class="analysis-vectors" style="margin-top:.5rem">' + vectors + ' defense vectors &middot; ' + conflicts + ' tier conflicts</div>' +
+      '</div>';
+    });
+  }
+
+  // Inline analysis viewer
+  html += '<div id="analysisViewer" style="display:none"></div>';
+
+  // Case actions
+  html += '<div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid rgba(212,168,67,.06);display:flex;gap:.75rem">' +
+    '<button class="btn btn-outline btn-sm" onclick="archiveCase()">Archive Case</button>' +
+    '<a href="/generate.html?case_id=' + currentCaseId + '" class="btn btn-gold btn-sm">Generate Draft Motion</a>' +
+  '</div>';
+
+  document.getElementById('caseDetailContent').innerHTML = html;
+}
+
+function backToCases() {
+  currentCaseId = null;
+  document.getElementById('caseDetail').style.display = 'none';
+  document.getElementById('dashContent').style.display = 'block';
+}
+
+// ===== CREATE CASE =====
+function openNewCaseModal() {
+  document.getElementById('newCaseModal').classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+async function createCase() {
+  var title = document.getElementById('newCaseTitle').value.trim();
+  if (!title) { showToast('Case title is required', true); return; }
+
+  var btn = document.getElementById('createCaseBtn');
+  btn.disabled = true; btn.textContent = 'Creating...';
+
+  try {
+    var r = await fetch('/api/cases', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        title: title,
+        state: document.getElementById('newCaseState').value,
+        county: document.getElementById('newCaseCounty').value,
+        charge: document.getElementById('newCaseCharge').value,
+        case_type: document.getElementById('newCaseType').value,
+        description: document.getElementById('newCaseDesc').value
+      })
+    });
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+
+    closeModal('newCaseModal');
+    showToast('Case created: ' + data.case.case_number);
+    loadCases();
+
+    // Clear form
+    document.getElementById('newCaseTitle').value = '';
+    document.getElementById('newCaseCounty').value = '';
+    document.getElementById('newCaseCharge').value = '';
+    document.getElementById('newCaseDesc').value = '';
+  } catch (err) {
+    showToast('Failed: ' + err.message, true);
+  }
+  btn.disabled = false; btn.textContent = 'Create Case';
+}
+
+// ===== ADD EVIDENCE =====
+function openAddEvidenceModal() {
+  document.getElementById('addEvidenceModal').classList.add('open');
+}
+
+async function addEvidence() {
+  var title = document.getElementById('evTitle').value.trim();
+  if (!title) { showToast('Evidence title is required', true); return; }
+
+  var btn = document.getElementById('addEvBtn');
+  btn.disabled = true; btn.textContent = 'Adding...';
+
+  try {
+    var fileInput = document.getElementById('evFile');
+    var filePath = null;
+    var fileName = null;
+    var fileType = null;
+    var fileSize = null;
+    var sha256 = null;
+
+    // Upload file if present
+    if (fileInput.files.length > 0) {
+      var file = fileInput.files[0];
+      fileName = file.name;
+      fileType = file.type;
+      fileSize = file.size;
+
+      // Compute SHA-256
+      var buffer = await file.arrayBuffer();
+      var hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+      var hashArray = Array.from(new Uint8Array(hashBuffer));
+      sha256 = hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+
+      // Upload to Supabase Storage
+      var storagePath = currentSession.user.id + '/' + currentCaseId + '/' + Date.now() + '-' + file.name;
+      var uploadResult = await sb.storage.from('evidence').upload(storagePath, file);
+      if (uploadResult.error) throw uploadResult.error;
+      filePath = storagePath;
+    }
+
+    var r = await fetch('/api/evidence', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        case_id: currentCaseId,
+        title: title,
+        description: document.getElementById('evDesc').value,
+        evidence_type: document.getElementById('evType').value,
+        source: document.getElementById('evSource').value,
+        file_name: fileName,
+        file_type: fileType,
+        file_size: fileSize,
+        file_path: filePath,
+        sha256_hash: sha256
+      })
+    });
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+
+    closeModal('addEvidenceModal');
+    showToast('Evidence added successfully');
+    openCase(currentCaseId); // Refresh
+
+    // Clear form
+    document.getElementById('evTitle').value = '';
+    document.getElementById('evDesc').value = '';
+    document.getElementById('evSource').value = '';
+    document.getElementById('evFile').value = '';
+  } catch (err) {
+    showToast('Failed: ' + err.message, true);
+  }
+  btn.disabled = false; btn.textContent = 'Add Evidence';
+}
+
+// ===== REANALYZE =====
+async function reanalyzeCase() {
+  if (!currentCaseId) return;
+  var context = prompt('Add any additional context for this reanalysis (or leave blank):');
+
+  showToast('Running analysis... this may take 30-60 seconds');
+
+  try {
+    var r = await fetch('/api/reanalyze', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        case_id: currentCaseId,
+        reason: 'manual_rerun',
+        additional_context: context || ''
+      })
+    });
+    var text = await r.text();
+    var data = JSON.parse(text.trim());
+    if (data.error) throw new Error(data.error);
+
+    showToast('Analysis complete! Version ' + data.version + ' — ' + (data.analysis.inversion_vectors || []).length + ' vectors found');
+    openCase(currentCaseId); // Refresh
+  } catch (err) {
+    showToast('Analysis failed: ' + err.message, true);
+  }
+}
+
+// ===== VIEW ANALYSIS =====
+// Helper: extract display text from any item (string or object)
+function itemText(item) {
+  if (!item) return '';
+  if (typeof item === 'string') return item;
+  // Tier conflict objects
+  if (item.issue && item.conflict_type) return item.issue + ' [' + item.conflict_type + ']' + (item.inversion_potential ? ' — Potential: ' + item.inversion_potential : '');
+  // Escape hatch objects
+  if (item.statute && item.provision) return item.statute + ': ' + item.provision + (item.application ? ' — ' + item.application : '');
+  if (item.escape_route && item.legal_basis) return item.escape_route + ' — ' + item.legal_basis + (item.procedural_path ? ' [' + item.procedural_path + ']' : '');
+  // Motion objects
+  if (item.motion_type && item.basis) return item.motion_type + ': ' + item.basis + (item.target ? ' — Target: ' + item.target : '') + (item.priority ? ' [' + item.priority + ']' : '');
+  // Weakness objects
+  if (item.weakness && item.detail) return item.weakness + ' — ' + item.detail;
+  // Vector-style objects (old schema)
+  if (item.vector_name && item.inversion_logic) return item.vector_name + ' — ' + item.inversion_logic + (item.statutory_basis ? ' (' + item.statutory_basis + ')' : '');
+  // Generic objects with common fields
+  if (item.title && item.description) return item.title + ' — ' + item.description;
+  if (item.title && item.argument) return item.title + ': ' + item.argument;
+  if (item.title) return item.title;
+  if (item.description) return item.description;
+  if (item.text) return item.text;
+  if (item.argument) return item.argument;
+  if (item.name) return item.name;
+  if (item.issue) return item.issue;
+  if (item.provision) return item.provision;
+  if (item.motion) return item.motion;
+  if (item.warning) return item.warning;
+  if (item.weakness) return item.weakness;
+  if (item.basis) return item.basis;
+  if (item.conflict) return item.conflict;
+  if (item.legal_basis) return item.legal_basis;
+  if (item.vector_name) return item.vector_name;
+  if (item.inversion_logic) return item.inversion_logic;
+  if (item.statute) return item.statute;
+  if (item.application) return item.application;
+  // Last resort
+  try { var s = JSON.stringify(item); return s.length < 500 ? s : s.slice(0, 500) + '...'; } catch(e) { return String(item); }
+}
+
+function viewAnalysis(analysisId) {
+  var analysis = null;
+  for (var i = 0; i < currentAnalyses.length; i++) {
+    if (currentAnalyses[i].id === analysisId) { analysis = currentAnalyses[i]; break; }
+  }
+  if (!analysis) return;
+
+  var res = analysis.result;
+  if (typeof res === 'string') { try { res = JSON.parse(res); } catch(e) { res = null; } }
+  if (!res) {
+    document.getElementById('analysisViewer').innerHTML = '<p style="color:var(--red);padding:1rem">No analysis data available for this version.</p>';
+    document.getElementById('analysisViewer').style.display = 'block';
+    return;
+  }
+
+  var ca = res.charge_analysis || {};
+  var ja = res.jurisdiction_analysis || {};
+  var vectors = res.inversion_vectors || [];
+  var conflicts = res.tier_conflict_opportunities || [];
+
+  var html = '<div style="margin-top:1.5rem;padding:1.5rem;background:rgba(15,33,64,.3);border:1px solid rgba(212,168,67,.15);border-radius:4px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">' +
+    '<h3 style="font-family:var(--font-display);font-size:1.3rem;color:var(--gold)">Version ' + analysis.version + ' Results</h3>' +
+    '<button class="btn btn-outline btn-sm" onclick="document.getElementById(\'analysisViewer\').style.display=\'none\'">Close</button></div>';
+
+  // Charge header
+  html += '<div style="padding:1rem;background:rgba(6,14,26,.5);border-radius:3px;margin-bottom:1rem">' +
+    '<div style="font-family:var(--font-display);font-size:1.4rem;color:var(--white-pure);margin-bottom:.5rem">' + esc(ca.offense || 'Analysis Complete') + '</div>' +
+    '<div style="display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.8rem;color:var(--gray-light)">' +
+    (ca.governing_statute ? '<span>Statute: ' + esc(ca.governing_statute) + '</span>' : '') +
+    (ca.severity_class ? '<span>Severity: ' + esc(ca.severity_class) + '</span>' : '') +
+    (ca.court_type ? '<span>Court: ' + esc(ca.court_type) + '</span>' : '') +
+    '</div></div>';
+
+  // Tier conflicts
+  if (conflicts.length > 0) {
+    html += '<div style="margin-bottom:1rem"><div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:.5rem">Tier Conflicts (' + conflicts.length + ')</div>';
+    conflicts.forEach(function(c) {
+      html += '<div style="padding:.75rem;background:rgba(232,93,93,.04);border:1px solid rgba(232,93,93,.15);border-radius:3px;margin-bottom:.5rem;font-size:.85rem;color:var(--gray-light);line-height:1.6">' + esc(itemText(c)) + '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Three-tier analysis
+  if (ja.federal_provisions || ja.state_provisions || ja.municipal_provisions) {
+    var fp = ja.federal_provisions || {}, sp = ja.state_provisions || {}, mp = ja.municipal_provisions || {};
+    html += '<div style="margin-bottom:1rem"><div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem">Three-Tier Jurisdictional Analysis</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem">';
+    html += '<div style="padding:1rem;background:rgba(6,14,26,.5);border-radius:3px"><div style="font-size:.65rem;font-weight:700;letter-spacing:.12em;color:var(--gold);margin-bottom:.5rem;padding-bottom:.35rem;border-bottom:1px solid rgba(212,168,67,.1)">FEDERAL</div>';
+    (fp.constitutional_issues || []).concat(fp.federal_statutes || []).concat(fp.supreme_court_precedent || []).forEach(function(item) {
+      html += '<div style="font-size:.82rem;color:var(--gray-light);margin-bottom:.35rem;padding-left:.75rem;position:relative"><span style="position:absolute;left:0;color:var(--gold-dark)">›</span>' + esc(itemText(item)) + '</div>';
+    });
+    html += '</div>';
+    html += '<div style="padding:1rem;background:rgba(6,14,26,.5);border-radius:3px"><div style="font-size:.65rem;font-weight:700;letter-spacing:.12em;color:#64B4FF;margin-bottom:.5rem;padding-bottom:.35rem;border-bottom:1px solid rgba(100,180,255,.1)">STATE</div>';
+    (sp.state_code_sections || []).concat(sp.state_case_law || []).concat(sp.state_procedure_rules || []).forEach(function(item) {
+      html += '<div style="font-size:.82rem;color:var(--gray-light);margin-bottom:.35rem;padding-left:.75rem;position:relative"><span style="position:absolute;left:0;color:var(--gold-dark)">›</span>' + esc(itemText(item)) + '</div>';
+    });
+    html += '</div>';
+    html += '<div style="padding:1rem;background:rgba(6,14,26,.5);border-radius:3px"><div style="font-size:.65rem;font-weight:700;letter-spacing:.12em;color:#5DE8A0;margin-bottom:.5rem;padding-bottom:.35rem;border-bottom:1px solid rgba(93,232,160,.1)">MUNICIPAL</div>';
+    (mp.local_ordinances || []).concat(mp.municipal_procedures || []).concat(mp.penalty_schedule_differences || []).forEach(function(item) {
+      html += '<div style="font-size:.82rem;color:var(--gray-light);margin-bottom:.35rem;padding-left:.75rem;position:relative"><span style="position:absolute;left:0;color:var(--gold-dark)">›</span>' + esc(itemText(item)) + '</div>';
+    });
+    html += '</div></div></div>';
+  }
+
+  // Elements
+  if (ca.elements_required && ca.elements_required.length > 0) {
+    html += '<div style="margin-bottom:1rem"><div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem">Elements Prosecution Must Prove (' + ca.elements_required.length + ')</div>';
+    ca.elements_required.forEach(function(el) {
+      html += '<div style="font-size:.85rem;color:var(--gray-light);padding:.25rem 0 .25rem 1rem;position:relative"><span style="position:absolute;left:0;color:var(--gold-dark)">—</span>' + esc(itemText(el)) + '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Defense vectors
+  if (vectors.length > 0) {
+    html += '<div style="margin-bottom:1rem"><div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem">Defense Inversion Vectors (' + vectors.length + ')</div>';
+    vectors.forEach(function(v) {
+      // Handle both object and flat structures
+      var vTitle = v.title || v.vector_name || v.name || itemText(v);
+      var vArg = v.argument || v.inversion_logic || v.description || v.analysis || v.text || '';
+      var vCat = v.category || v.type || 'GENERAL';
+      var vTier = v.legal_tier || v.tier || '';
+      var vLaw = v.applicable_law || v.statutory_basis || v.law || v.citation || '';
+      var vConf = parseInt(v.confidence) || 0;
+      // Map old success_probability to confidence
+      if (!v.confidence && v.success_probability) {
+        var sp = v.success_probability.toUpperCase();
+        if (sp.indexOf('HIGH') >= 0) vConf = 75;
+        else if (sp.indexOf('MEDIUM') >= 0) vConf = 50;
+        else if (sp.indexOf('LOW') >= 0) vConf = 25;
+      }
+      var confColor = (vConf >= 70) ? 'var(--green)' : (vConf >= 40) ? 'var(--gold)' : 'var(--red)';
+
+      html += '<div style="padding:1rem;background:rgba(6,14,26,.5);border:1px solid rgba(212,168,67,.06);border-radius:3px;margin-bottom:.75rem">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;flex-wrap:wrap;gap:.5rem">' +
+          '<div><span style="font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .5rem;background:rgba(212,168,67,.1);color:var(--gold);border-radius:2px">' + esc(vCat) + '</span>' +
+          (vTier ? ' <span style="font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .5rem;background:rgba(100,180,255,.1);color:#64B4FF;border-radius:2px">' + esc(vTier) + '</span>' : '') +
+          '</div>' +
+          '<span style="font-family:var(--font-mono);font-size:.78rem;color:' + confColor + '">Confidence: ' + vConf + '%</span>' +
+        '</div>' +
+        '<div style="font-family:var(--font-display);font-size:1.05rem;font-weight:600;color:var(--white-pure);margin-bottom:.35rem">' + esc(vTitle) + '</div>' +
+        (vLaw ? '<div style="font-family:var(--font-mono);font-size:.75rem;color:var(--gold-dark);margin-bottom:.35rem">' + esc(vLaw) + '</div>' : '') +
+        (vArg ? '<div style="font-size:.85rem;color:var(--gray-light);line-height:1.7">' + esc(vArg) + '</div>' : '') +
+      '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Escape hatches, weaknesses, motions, warnings — all use itemText for object safety
+  var sections = [
+    { key: 'statutory_escape_hatches', label: 'Statutory Escape Hatches', color: 'var(--gold)' },
+    { key: 'prosecution_weaknesses', label: 'Prosecution Weaknesses', color: 'var(--blue)' },
+    { key: 'recommended_motions', label: 'Recommended Motions', color: 'var(--green)' },
+    { key: 'critical_warnings', label: 'Critical Warnings', color: 'var(--red)' },
+    { key: 'evidence_priorities', label: 'Evidence Priorities', color: 'var(--gold)' },
+    { key: 'critical_deadlines', label: 'Critical Deadlines', color: 'var(--red)' }
+  ];
+  sections.forEach(function(sec) {
+    var items = res[sec.key];
+    if (items && items.length > 0) {
+      html += '<div style="margin-bottom:1rem"><div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:' + sec.color + ';margin-bottom:.5rem">' + sec.label + '</div>';
+      items.forEach(function(item) {
+        html += '<div style="font-size:.85rem;color:var(--gray-light);padding:.25rem 0 .25rem 1rem;position:relative;line-height:1.6"><span style="position:absolute;left:0;color:var(--gold-dark)">—</span>' + esc(itemText(item)) + '</div>';
+      });
+      html += '</div>';
+    }
+  });
+
+  html += '</div>';
+
+  document.getElementById('analysisViewer').innerHTML = html;
+  document.getElementById('analysisViewer').style.display = 'block';
+  document.getElementById('analysisViewer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ===== ARCHIVE CASE =====
+async function archiveCase() {
+  if (!confirm('Archive this case? It will be moved to archived status.')) return;
+
+  try {
+    var r = await fetch('/api/cases?id=' + currentCaseId, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+
+    showToast('Case archived');
+    backToCases();
+    loadCases();
+  } catch (err) {
+    showToast('Failed: ' + err.message, true);
+  }
+}
+
+// ===== SUBSCRIPTION =====
+async function loadSubscription() {
+  try {
+    var result = await sb.from('user_profiles').select('*').eq('user_id', currentSession.user.id).single();
+    var profile = result.data;
+    if (!profile) return;
+
+    var tier = profile.subscription_tier || 'none';
+    var used = profile.analyses_this_month || 0;
+    var limit = tier === 'firm' || tier === 'enterprise' ? 'Unlimited' : tier === 'practitioner' ? 50 : tier === 'single' ? 1 : tier === 'none' ? 1 : 0;
+    var pct = typeof limit === 'number' && limit > 0 ? Math.min(100, (used / limit) * 100) : (tier === 'firm' || tier === 'enterprise' ? 10 : 0);
+
+    document.getElementById('statUsage').textContent = used + '/' + limit;
+
+    var tierNames = { none: 'Free', single: 'Single Analysis', practitioner: 'Practitioner', firm: 'Firm', enterprise: 'Enterprise', student: 'Law Student (Free)' };
+    var tierPrices = { none: 'Free — 1 preview analysis', single: '$29/analysis', practitioner: '$297/month', firm: '$497/seat/month', enterprise: 'Custom', student: 'Free — .edu verified' };
+    var tierColors = { none: 'var(--gray)', single: 'var(--blue)', practitioner: 'var(--gold)', firm: 'var(--green)', enterprise: 'var(--purple)', student: 'var(--green)' };
+
+    var html = '<div class="sub-card">' +
+      '<div class="sub-tier" style="color:' + (tierColors[tier] || 'var(--gold)') + '">' + (tierNames[tier] || tier) + '</div>' +
+      '<div style="font-size:.85rem;color:var(--gray);margin-bottom:.5rem">' + (tierPrices[tier] || '') + '</div>' +
+      '<div class="sub-usage">' + used + ' analyses used' + (typeof limit === 'number' ? ' of ' + limit + ' this month' : ' (unlimited)') + '</div>' +
+      '<div class="sub-progress"><div class="sub-progress-fill" style="width:' + pct + '%"></div></div>' +
+    '</div>';
+
+    // Upgrade options (shown for free, single, practitioner tiers)
+    if (tier === 'none' || tier === 'single' || tier === 'practitioner') {
+      html += '<div style="margin-top:2rem"><h3 style="font-family:var(--font-display);font-size:1.2rem;color:var(--white-pure);margin-bottom:1rem">Upgrade Your Plan</h3>';
+      html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">';
+
+      if (tier !== 'single' && tier !== 'practitioner' && tier !== 'firm') {
+        html += '<div style="padding:1.5rem;background:rgba(15,33,64,.3);border:1px solid rgba(212,168,67,.08);border-radius:4px">' +
+          '<div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:.5rem">Single Analysis</div>' +
+          '<div style="font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--white-pure)">$29</div>' +
+          '<div style="font-size:.8rem;color:var(--gray);margin-bottom:1rem">One full unlocked analysis</div>' +
+          '<button class="btn btn-outline btn-sm" style="width:100%" onclick="upgradeCheckout(\'single\')">Buy Analysis</button></div>';
+      }
+
+      if (tier !== 'practitioner' && tier !== 'firm') {
+        html += '<div style="padding:1.5rem;background:rgba(15,33,64,.3);border:1px solid var(--gold);border-radius:4px">' +
+          '<div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem">Practitioner</div>' +
+          '<div style="font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--white-pure)">$297<span style="font-size:.85rem;color:var(--gray)">/mo</span></div>' +
+          '<div style="font-size:.8rem;color:var(--gray);margin-bottom:1rem">50 analyses/month + draft motions</div>' +
+          '<button class="btn btn-gold btn-sm" style="width:100%" onclick="upgradeCheckout(\'practitioner\')">Subscribe</button></div>';
+      }
+
+      if (tier !== 'firm') {
+        html += '<div style="padding:1.5rem;background:rgba(15,33,64,.3);border:1px solid rgba(212,168,67,.08);border-radius:4px">' +
+          '<div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin-bottom:.5rem">Firm</div>' +
+          '<div style="font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--white-pure)">$497<span style="font-size:.85rem;color:var(--gray)">/seat/mo</span></div>' +
+          '<div style="font-size:.8rem;color:var(--gray);margin-bottom:1rem">Unlimited + case patterns</div>' +
+          '<button class="btn btn-outline btn-sm" style="width:100%" onclick="upgradeCheckout(\'firm\')">Subscribe</button></div>';
+      }
+
+      html += '</div>';
+      if (tier === 'practitioner') {
+        html += '<p style="font-size:.78rem;color:var(--gray);margin-top:.75rem">Upgrading mid-cycle? Stripe automatically prorates — unused time on your current plan is credited toward the new one.</p>';
+      }
+      html += '</div>';
+    }
+
+    // Data export (TDPSA compliance)
+    html += '<div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid rgba(212,168,67,.06)">' +
+      '<h3 style="font-family:var(--font-display);font-size:1.1rem;color:var(--white-pure);margin-bottom:.75rem">Your Data</h3>' +
+      '<p style="font-size:.82rem;color:var(--gray);margin-bottom:1rem">Download a complete export of all your data — cases, analyses, evidence, documents, deadlines, and activity history.</p>' +
+      '<button class="btn btn-outline btn-sm" onclick="exportUserData()">Download My Data (JSON)</button></div>';
+
+    document.getElementById('subInfo').innerHTML = html;
+  } catch (err) {
+    document.getElementById('subInfo').innerHTML = '<p style="color:var(--red)">Failed to load subscription info.</p>';
+  }
+}
+
+async function upgradeCheckout(plan) {
+  try {
+    var resp = await fetch('/api/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentSession.access_token },
+      body: JSON.stringify({ tier: plan })
+    });
+    var data = await resp.json();
+    if (data.url) window.location.href = data.url;
+    else if (data.error) alert(data.error);
+  } catch (e) { alert('Checkout error: ' + e.message); }
+}
+
+async function exportUserData() {
+  try {
+    var resp = await fetch('/api/platform?action=audit-export', {
+      headers: { 'Authorization': 'Bearer ' + currentSession.access_token }
+    });
+    var blob = await resp.blob();
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'inveritas-export-' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) { alert('Export failed: ' + e.message); }
+}
+
+// ===== PASSWORD =====
+async function changePassword() {
+  var email = currentSession.user.email;
+  try {
+    await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/login.html' });
+    showToast('Password reset link sent to ' + email);
+  } catch (err) {
+    showToast('Failed: ' + err.message, true);
+  }
+}
+
+// ===== LOGOUT =====
+async function doLogout() {
+  await sb.auth.signOut();
+  window.location.href = '/login.html';
+}
+</script>
+</body>
+</html>

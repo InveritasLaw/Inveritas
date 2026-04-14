@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inveritas — Legal Defense Analysis Engine</title>
+<meta name="description" content="AI-powered statutory inversion analysis across federal, state, and municipal jurisdictions.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Supabase Client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy-deep:#060E1A;--navy:#0A1628;--navy-mid:#0F2140;--navy-light:#1A3158;
+  --gold:#D4A843;--gold-light:#E8C76A;--gold-dark:#B8912E;--gold-muted:rgba(212,168,67,0.15);
+  --white:#F2F0ED;--white-pure:#FFF;--gray:#8A99AB;--gray-light:#C5CDD8;
+  --red:#E85D5D;--green:#5DE8A0;--blue:#64B4FF;--purple:#B464FF;--orange:#FFB464;
+  --font-display:'Cormorant Garamond',Georgia,serif;
+  --font-body:'DM Sans',-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--navy-deep);color:var(--white);font-family:var(--font-body);font-weight:400;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:rgba(6,14,26,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,168,67,0.08)}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:.75rem;text-decoration:none}
+.nav-logo-text{font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--white);letter-spacing:.08em}
+.nav-links{display:flex;align-items:center;gap:2rem;list-style:none}
+.nav-links a,.nav-links button{color:var(--gray);text-decoration:none;font-size:.85rem;font-weight:500;letter-spacing:.04em;transition:color .3s;background:none;border:none;cursor:pointer;font-family:var(--font-body)}
+.nav-links a:hover,.nav-links button:hover{color:var(--gold)}
+.nav-user{color:var(--gold);font-size:.8rem;font-weight:600}
+
+.container{max-width:1200px;margin:0 auto;padding:0 2rem}
+.engine-wrap{padding-top:5rem;min-height:100vh}
+.engine-header{padding:2.5rem 0 2rem;text-align:center}
+.engine-header h1{font-family:var(--font-display);font-size:2rem;font-weight:600;color:var(--white-pure);margin-bottom:.5rem}
+.engine-header p{color:var(--gray);font-size:.95rem}
+
+/* Auth gate overlay */
+.auth-gate{position:fixed;inset:0;z-index:5000;background:var(--navy-deep);display:flex;align-items:center;justify-content:center;text-align:center}
+.auth-gate-inner{max-width:400px;padding:2rem}
+.auth-gate h2{font-family:var(--font-display);font-size:1.8rem;color:var(--white-pure);margin-bottom:1rem}
+.auth-gate p{color:var(--gray);margin-bottom:2rem;font-size:.95rem}
+.auth-gate .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.85rem 2rem;font-family:var(--font-body);font-size:.9rem;font-weight:600;letter-spacing:.04em;text-decoration:none;border-radius:3px;border:none;cursor:pointer;transition:all .3s;background:var(--gold);color:var(--navy-deep)}
+.auth-gate .btn:hover{background:var(--gold-light)}
+
+/* Form */
+.analysis-form{background:rgba(15,33,64,0.4);border:1px solid rgba(212,168,67,0.1);border-radius:4px;padding:2rem;margin-bottom:2rem}
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:1.5rem}
+.form-group{display:flex;flex-direction:column;gap:.4rem}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.form-input,.form-select,.form-textarea{background:rgba(6,14,26,0.8);border:1px solid rgba(212,168,67,0.12);border-radius:3px;padding:.75rem 1rem;color:var(--white);font-family:var(--font-body);font-size:.9rem;transition:border-color .3s;outline:none;width:100%}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold)}
+.form-select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23D4A843' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1rem center}
+.form-select option{background:var(--navy);color:var(--white)}
+.form-textarea{min-height:140px;resize:vertical;font-family:var(--font-body);line-height:1.6}
+.form-hint{font-size:.75rem;color:var(--gray);margin-top:.25rem}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.85rem 2rem;font-family:var(--font-body);font-size:.9rem;font-weight:600;letter-spacing:.04em;text-decoration:none;border-radius:3px;border:none;cursor:pointer;transition:all .3s}
+.btn-gold{background:var(--gold);color:var(--navy-deep)}
+.btn-gold:hover{background:var(--gold-light);transform:translateY(-1px);box-shadow:0 8px 30px rgba(212,168,67,.3)}
+.btn-gold:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-full{width:100%}
+.btn-outline{background:transparent;color:var(--gold);border:1px solid rgba(212,168,67,.3)}
+.btn-outline:hover{border-color:var(--gold);background:var(--gold-muted)}
+
+/* Loading */
+.loading-overlay{text-align:center;padding:4rem 2rem}
+.loading-spinner{width:48px;height:48px;border:3px solid rgba(212,168,67,.15);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1.5rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:var(--gold);font-size:1rem;margin-bottom:.5rem}
+.loading-sub{color:var(--gray);font-size:.85rem}
+
+.error-box{background:rgba(232,93,93,0.08);border:1px solid rgba(232,93,93,.3);border-radius:4px;padding:1.5rem;margin:1.5rem 0;color:var(--red);font-size:.9rem}
+
+/* Results */
+.results-wrap{animation:fadeUp .6s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.result-header{background:rgba(15,33,64,.4);border:1px solid rgba(212,168,67,.15);border-radius:4px;padding:2rem;margin-bottom:1.5rem}
+.result-header-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem}
+.result-offense{font-family:var(--font-display);font-size:1.6rem;font-weight:600;color:var(--white-pure)}
+.result-severity{display:inline-block;padding:.25rem .75rem;border-radius:2px;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.severity-felony{background:rgba(232,93,93,.15);color:var(--red)}
+.severity-misdemeanor{background:rgba(232,180,93,.15);color:#E8B45D}
+.severity-infraction{background:rgba(93,232,160,.15);color:var(--green)}
+.severity-ordinance{background:rgba(100,180,255,.15);color:var(--blue)}
+.result-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem}
+.result-meta-item{font-size:.8rem}
+.result-meta-label{color:var(--gray);font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.15rem}
+.result-meta-value{color:var(--gray-light)}
+
+.result-section{background:rgba(15,33,64,.3);border:1px solid rgba(212,168,67,.08);border-radius:4px;margin-bottom:1.25rem;overflow:hidden}
+.result-section-header{padding:1.25rem 1.5rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .3s}
+.result-section-header:hover{background:rgba(212,168,67,.04)}
+.result-section-title{font-family:var(--font-display);font-size:1.15rem;font-weight:600;color:var(--white-pure)}
+.result-section-toggle{color:var(--gold);font-size:1.2rem;transition:transform .3s}
+.result-section-toggle.open{transform:rotate(180deg)}
+.result-section-body{padding:0 1.5rem 1.5rem;display:none}
+.result-section-body.open{display:block}
+
+.tier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.tier-col{background:rgba(6,14,26,.5);border-radius:3px;padding:1.25rem}
+.tier-col-label{font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid rgba(212,168,67,.1)}
+.tier-col-label.federal{color:var(--gold)}
+.tier-col-label.state{color:var(--blue)}
+.tier-col-label.municipal{color:var(--green)}
+.tier-item{font-size:.85rem;color:var(--gray-light);margin-bottom:.5rem;padding-left:1rem;position:relative}
+.tier-item::before{content:'›';position:absolute;left:0;color:var(--gold-dark)}
+
+.vector-card{background:rgba(6,14,26,.6);border:1px solid rgba(212,168,67,.06);border-radius:3px;padding:1.5rem;margin-bottom:1rem;transition:border-color .3s}
+.vector-card:hover{border-color:rgba(212,168,67,.2)}
+.vector-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem}
+.vector-category{font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .6rem;border-radius:2px}
+.cat-constitutional{background:rgba(232,93,93,.12);color:var(--red)}
+.cat-definitional{background:rgba(212,168,67,.12);color:var(--gold)}
+.cat-procedural{background:rgba(100,180,255,.12);color:var(--blue)}
+.cat-evidentiary{background:rgba(180,100,255,.12);color:var(--purple)}
+.cat-tier_conflict{background:rgba(93,232,160,.12);color:var(--green)}
+.cat-statutory{background:rgba(255,180,100,.12);color:var(--orange)}
+.cat-enhancement{background:rgba(255,100,180,.12);color:#FF64B4}
+.vector-confidence{font-family:var(--font-mono);font-size:.8rem;font-weight:500}
+.conf-high{color:var(--green)}
+.conf-med{color:var(--gold)}
+.conf-low{color:var(--red)}
+.vector-title{font-family:var(--font-display);font-size:1.15rem;font-weight:600;color:var(--white-pure);margin-bottom:.5rem}
+.vector-text{font-size:.88rem;color:var(--gray-light);line-height:1.7;margin-bottom:.75rem}
+.vector-law{font-family:var(--font-mono);font-size:.78rem;color:var(--gold-dark);margin-bottom:.5rem}
+.citation-badge{display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.15rem .5rem;border-radius:2px;margin-left:.5rem;vertical-align:middle}
+.citation-verified{background:rgba(93,232,160,.12);color:var(--green)}
+.citation-unverified{background:rgba(232,93,93,.12);color:var(--red)}
+.citation-unverifiable{background:rgba(138,153,171,.12);color:var(--gray)}
+.verification-summary{padding:1rem 1.25rem;background:rgba(15,33,64,.4);border:1px solid rgba(212,168,67,.1);border-radius:4px;margin-bottom:1.5rem;font-size:.85rem}
+.verification-summary .rate{font-family:var(--font-mono);font-weight:700}
+.verification-summary .warn{color:var(--red);margin-top:.5rem;font-size:.82rem}
+.vector-tier-badge{display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .5rem;border-radius:2px;margin-left:.5rem}
+.badge-federal{background:rgba(212,168,67,.1);color:var(--gold)}
+.badge-state{background:rgba(100,180,255,.1);color:var(--blue)}
+.badge-municipal{background:rgba(93,232,160,.1);color:var(--green)}
+.badge-cross-tier{background:rgba(255,100,100,.1);color:var(--red)}
+
+.motion-badge{display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .5rem;border-radius:2px;margin-left:.5rem}
+.motion-suppression{background:rgba(232,93,93,.12);color:var(--red)}
+.motion-weight{background:rgba(138,153,171,.15);color:var(--gray-light)}
+.motion-both{background:rgba(180,100,255,.12);color:var(--purple)}
+.motion-dismissal{background:rgba(93,232,160,.12);color:var(--green)}
+.motion-procedural{background:rgba(100,180,255,.12);color:var(--blue)}
+
+.vector-prereqs{background:rgba(212,168,67,.04);border:1px solid rgba(212,168,67,.1);border-radius:3px;padding:.75rem 1rem;margin-top:.5rem}
+.vector-prereqs-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-dark);margin-bottom:.4rem}
+.vector-prereqs ul{list-style:none;display:flex;flex-direction:column;gap:.25rem}
+.vector-prereqs li{font-size:.8rem;color:var(--gray-light);padding-left:1rem;position:relative}
+.vector-prereqs li::before{content:'?';position:absolute;left:0;color:var(--gold);font-weight:700}
+
+.evidence-card{background:rgba(93,232,160,.04);border:1px solid rgba(93,232,160,.12);border-radius:3px;padding:1rem 1.25rem;margin-bottom:.5rem;display:flex;align-items:flex-start;gap:.75rem}
+.evidence-rank{font-family:var(--font-mono);font-size:.75rem;font-weight:700;color:var(--green);min-width:1.5rem}
+.evidence-text{font-size:.88rem;color:var(--gray-light);line-height:1.6}
+
+.deadline-item{background:rgba(232,93,93,.04);border:1px solid rgba(232,93,93,.08);border-radius:3px;padding:.75rem 1rem;margin-bottom:.5rem;font-size:.88rem;color:var(--gray-light);display:flex;align-items:flex-start;gap:.5rem}
+.deadline-item::before{content:'⏱';font-size:.85rem}
+
+.conflict-alert{background:linear-gradient(135deg,rgba(232,93,93,.06),rgba(212,168,67,.06));border:1px solid rgba(232,93,93,.2);border-radius:4px;padding:1.5rem;margin-bottom:1rem}
+.conflict-alert-title{font-family:var(--font-display);font-size:1.1rem;font-weight:600;color:var(--red);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+.conflict-alert-text{font-size:.88rem;color:var(--gray-light);line-height:1.7}
+
+.result-list{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+.result-list li{font-size:.88rem;color:var(--gray-light);padding-left:1.25rem;position:relative;line-height:1.6}
+.result-list li::before{content:'—';position:absolute;left:0;color:var(--gold-dark)}
+.result-list.warnings li::before{content:'⚠';color:var(--red)}
+.result-list.motions li::before{content:'📋';left:-.1rem}
+
+.ai-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .8rem;background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.15);border-radius:2px;font-size:.65rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-dark);margin-bottom:1rem}
+
+.engine-footer{padding:2rem 0;border-top:1px solid rgba(212,168,67,.06);margin-top:3rem}
+.disclaimer{font-size:.72rem;color:rgba(138,153,171,.5);line-height:1.6;max-width:800px}
+
+.export-bar{display:flex;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.export-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.25rem;font-family:var(--font-body);font-size:.8rem;font-weight:600;letter-spacing:.04em;border-radius:3px;border:1px solid rgba(212,168,67,.25);background:transparent;color:var(--gold);cursor:pointer;transition:all .3s}
+.export-btn:hover{background:var(--gold-muted);border-color:var(--gold)}
+.export-btn svg{width:16px;height:16px;fill:currentColor}
+.export-toast{position:fixed;bottom:2rem;right:2rem;padding:.75rem 1.5rem;background:var(--gold);color:var(--navy-deep);font-size:.85rem;font-weight:600;border-radius:3px;z-index:9999;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none}
+.export-toast.show{opacity:1;transform:translateY(0)}
+
+/* Freemium Blur */
+.paywall-blur{position:relative;overflow:hidden}
+.paywall-blur .result-section-body,.paywall-blur .vector-card,.paywall-blur .tier-grid,.paywall-blur .conflict-alert,.paywall-blur .result-list{filter:blur(8px);user-select:none;pointer-events:none}
+.paywall-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;background:rgba(6,14,26,0.6);backdrop-filter:blur(2px);border-radius:4px}
+.paywall-overlay .unlock-btn{padding:.85rem 2rem;background:var(--gold);color:var(--navy-deep);font-family:var(--font-body);font-size:.9rem;font-weight:700;border:none;border-radius:3px;cursor:pointer;transition:all .3s;text-decoration:none}
+.paywall-overlay .unlock-btn:hover{background:var(--gold-light);transform:translateY(-2px);box-shadow:0 8px 25px rgba(212,168,67,.3)}
+.paywall-overlay p{color:var(--gray-light);font-size:.85rem;margin-top:.75rem;text-align:center}
+.paywall-count{text-align:center;padding:1rem;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.15);border-radius:4px;margin-bottom:1.5rem;font-size:.88rem;color:var(--gold)}
+
+/* Consent banner */
+.consent-banner{position:fixed;bottom:0;left:0;right:0;z-index:10001;background:rgba(10,22,40,0.98);border-top:1px solid rgba(212,168,67,.2);padding:1.5rem 2rem;backdrop-filter:blur(20px);animation:consentUp .4s ease both}
+@keyframes consentUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.consent-inner{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:2rem;flex-wrap:wrap}
+.consent-text{flex:1;min-width:300px;font-size:.82rem;color:var(--gray-light);line-height:1.6}
+.consent-text a{color:var(--gold);text-decoration:underline}
+.consent-btns{display:flex;gap:.75rem;flex-shrink:0}
+.consent-btn{padding:.6rem 1.5rem;font-family:var(--font-body);font-size:.8rem;font-weight:600;border-radius:3px;border:none;cursor:pointer;transition:all .3s}
+.consent-accept{background:var(--gold);color:var(--navy-deep)}
+.consent-accept:hover{background:var(--gold-light)}
+.consent-reject{background:transparent;color:var(--gray);border:1px solid rgba(212,168,67,.2)}
+.consent-reject:hover{color:var(--gold);border-color:var(--gold)}
+
+@media(max-width:768px){
+  .form-grid{grid-template-columns:1fr}
+  .tier-grid{grid-template-columns:1fr}
+  .result-header-top{flex-direction:column}
+  .nav-links{display:none}
+  .export-bar{flex-direction:column}
+  .consent-inner{flex-direction:column;text-align:center}
+  .consent-btns{justify-content:center}
+}
+
+@media print{
+  body{background:#fff!important;color:#000!important}
+  body::before,.auth-gate,.consent-banner{display:none!important}
+  nav,.analysis-form,.engine-header,.engine-footer,.export-bar,.loading-overlay,.error-box{display:none!important}
+  .engine-wrap{padding-top:0!important}
+  .result-header{background:#f5f5f5!important;border:1px solid #ccc!important}
+  .result-offense{color:#000!important}
+  .result-section{background:#fff!important;border:1px solid #ddd!important;break-inside:avoid}
+  .result-section-body{display:block!important}
+  .result-section-toggle{display:none!important}
+  .vector-card{background:#fafafa!important;border:1px solid #ddd!important;break-inside:avoid}
+  .vector-title{color:#000!important}
+  .vector-text{color:#333!important}
+  .container{max-width:100%!important;padding:0 1rem!important}
+  @page{margin:1.5cm;size:A4}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH GATE — shown until Supabase session confirmed -->
+<div class="auth-gate" id="authGate">
+  <div class="auth-gate-inner">
+    <h2>Sign in to access the<br>Statutory Inversion Engine</h2>
+    <p>Authentication required to run analyses.</p>
+    <a href="/login.html" class="btn">Sign In / Create Account</a>
+  </div>
+</div>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <svg width="32" height="32" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="512" height="512" rx="64" fill="#0A1628"/>
+        <path d="M256,60 L380,90 L380,280 C380,360 325,420 256,450 C187,420 132,360 132,280 L132,90 Z" fill="#0F2140" stroke="#D4A843" stroke-width="4"/>
+        <line x1="190" y1="230" x2="322" y2="208" stroke="#D4A843" stroke-width="4" stroke-linecap="round"/>
+        <polygon points="256,195 247,215 265,215" fill="#D4A843"/>
+        <path d="M170,246 Q190,268 210,246" fill="none" stroke="#D4A843" stroke-width="3"/>
+        <path d="M302,224 Q322,246 342,224" fill="none" stroke="#D4A843" stroke-width="3"/>
+      </svg>
+      <span class="nav-logo-text">INVERITAS</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/#pricing">Pricing</a></li>
+      <li id="navAuthLinks"><a href="/login.html" class="btn btn-gold" style="padding:.5rem 1.25rem">Sign In</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="engine-wrap">
+  <div class="container">
+    <div class="engine-header">
+      <h1>Statutory Inversion Engine</h1>
+      <p>Three-tier analysis across federal, state, and municipal law</p>
+    </div>
+
+    <div class="analysis-form" id="analysisForm" style="display:none">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">State</label>
+          <select class="form-select" id="stateSelect">
+            <option value="Alabama">Alabama</option><option value="Alaska">Alaska</option><option value="Arizona">Arizona</option><option value="Arkansas">Arkansas</option><option value="California">California</option><option value="Colorado">Colorado</option><option value="Connecticut">Connecticut</option><option value="Delaware">Delaware</option><option value="Florida">Florida</option><option value="Georgia">Georgia</option><option value="Hawaii">Hawaii</option><option value="Idaho">Idaho</option><option value="Illinois">Illinois</option><option value="Indiana">Indiana</option><option value="Iowa">Iowa</option><option value="Kansas">Kansas</option><option value="Kentucky">Kentucky</option><option value="Louisiana">Louisiana</option><option value="Maine">Maine</option><option value="Maryland">Maryland</option><option value="Massachusetts">Massachusetts</option><option value="Michigan">Michigan</option><option value="Minnesota">Minnesota</option><option value="Mississippi">Mississippi</option><option value="Missouri">Missouri</option><option value="Montana">Montana</option><option value="Nebraska">Nebraska</option><option value="Nevada">Nevada</option><option value="New Hampshire">New Hampshire</option><option value="New Jersey">New Jersey</option><option value="New Mexico">New Mexico</option><option value="New York">New York</option><option value="North Carolina">North Carolina</option><option value="North Dakota">North Dakota</option><option value="Ohio">Ohio</option><option value="Oklahoma">Oklahoma</option><option value="Oregon">Oregon</option><option value="Pennsylvania">Pennsylvania</option><option value="Rhode Island">Rhode Island</option><option value="South Carolina">South Carolina</option><option value="South Dakota">South Dakota</option><option value="Tennessee">Tennessee</option><option value="Texas" selected>Texas</option><option value="Utah">Utah</option><option value="Vermont">Vermont</option><option value="Virginia">Virginia</option><option value="Washington">Washington</option><option value="West Virginia">West Virginia</option><option value="Wisconsin">Wisconsin</option><option value="Wyoming">Wyoming</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">County / City</label>
+          <input type="text" class="form-input" id="countyInput" placeholder="e.g. Williamson County, Liberty Hill">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Charge Type</label>
+          <input type="text" class="form-input" id="chargeInput" placeholder="e.g. DWI, Speeding, Assault">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Circumstances</label>
+          <textarea class="form-textarea" id="situationInput" placeholder="Describe the full circumstances — what happened, what was said, what evidence exists, any procedural details you know about the stop, arrest, or charging process..."></textarea>
+          <div class="form-hint">The more detail you provide, the more defense vectors Inveritas can identify. Include timing, officer statements, evidence handling, and any procedural irregularities.</div>
+        </div>
+      </div>
+      <button class="btn btn-gold btn-full" id="analyzeBtn" onclick="runAnalysis()">
+        ⚖️ Run Statutory Inversion Analysis
+      </button>
+    </div>
+
+    <div id="loadingState" style="display:none">
+      <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Inverting statutory language...</div>
+        <div class="loading-sub" id="loadingSub">Analyzing federal, state, and municipal provisions</div>
+      </div>
+    </div>
+
+    <div id="errorState" style="display:none">
+      <div class="error-box" id="errorMsg"></div>
+    </div>
+
+    <div id="resultsWrap" style="display:none"></div>
+
+    <div class="engine-footer">
+      <div class="disclaimer">
+        <strong>NOT LEGAL ADVICE.</strong> Inveritas is a legal research and analysis tool. It does not constitute legal advice, create an attorney-client relationship, or substitute for the judgment of a licensed attorney. All analysis is generated by artificial intelligence and may contain inaccuracies, hallucinated citations, or errors of law. Citations flagged with "verify" have not been independently confirmed. All analysis should be reviewed by a qualified legal professional before use in any legal proceeding. Results may vary by jurisdiction.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Consent Banner -->
+<div class="consent-banner" id="consentBanner" style="display:none">
+  <div class="consent-inner">
+    <div class="consent-text">
+      This site uses cookies and collects data (IP address, browser, device information) to operate and improve the service. By clicking "Accept All," you agree to our
+      <a href="/terms.html" target="_blank">Terms of Service</a>,
+      <a href="/privacy.html" target="_blank">Privacy Policy</a>, and
+      <a href="/cookies.html" target="_blank">Cookie Policy</a>, including the collection and use of your data as described therein.
+    </div>
+    <div class="consent-btns">
+      <button class="consent-btn consent-reject" onclick="rejectConsent()">Essential Only</button>
+      <button class="consent-btn consent-accept" onclick="acceptConsent()">Accept All</button>
+    </div>
+  </div>
+</div>
+
+<div class="export-toast" id="exportToast"></div>
+
+<script>
+// ===== SUPABASE INIT =====
+const SUPABASE_URL = 'https://dmkuskjfvnniqpjmlnmz.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRta3Vza2pmdm5uaXFwam1sbm16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NzcwMzIsImV4cCI6MjA5MDM1MzAzMn0.F7vzx6RwdnpT9DB1LT1y5uP9WXdWNpcytwSFFsv7D4o';
+let sb, currentSession;
+let userTier = 'none';
+
+if (SUPABASE_URL && !SUPABASE_URL.startsWith('__')) {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+// ===== AUTH GATE =====
+async function checkAuth() {
+  if (!sb) {
+    // No Supabase — hide everything, show error
+    document.getElementById('authGate').style.display = 'flex';
+    document.getElementById('analysisForm').style.display = 'none';
+    return;
+  }
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    // Not logged in — show gate, hide form
+    document.getElementById('authGate').style.display = 'flex';
+    document.getElementById('analysisForm').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = true;
+    return;
+  }
+  currentSession = session;
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('analysisForm').style.display = 'block';
+  document.getElementById('analyzeBtn').disabled = false;
+  // Swap nav: replace Sign In button with email + Sign Out
+  document.getElementById('navAuthLinks').innerHTML = '<span style="color:var(--gray-light);font-size:.82rem">' + session.user.email + '</span> &nbsp;<button onclick="signOut()" style="color:var(--gold);background:none;border:none;cursor:pointer;font-family:var(--font-body);font-size:.85rem;font-weight:500">Sign Out</button>';
+
+  // Fetch subscription tier
+  try {
+    const resp = await fetch('/api/cases?profile=true', {
+      headers: { 'Authorization': 'Bearer ' + session.access_token }
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.profile) userTier = data.profile.subscription_tier || 'none';
+    }
+  } catch(e) {}
+}
+
+async function signOut() {
+  if (sb) {
+    await sb.auth.signOut();
+  }
+  window.location.href = '/login.html';
+}
+
+// ===== CONSENT BANNER =====
+function checkConsent() {
+  if (!localStorage.getItem('inveritas_consent')) {
+    document.getElementById('consentBanner').style.display = 'block';
+  }
+}
+function acceptConsent() {
+  localStorage.setItem('inveritas_consent', JSON.stringify({ level: 'all', ts: new Date().toISOString() }));
+  document.getElementById('consentBanner').style.display = 'none';
+  // Log consent event
+  if (sb && currentSession) {
+    fetch('/api/log-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event: 'consent_accept', level: 'all' })
+    }).catch(() => {});
+  }
+}
+function rejectConsent() {
+  localStorage.setItem('inveritas_consent', JSON.stringify({ level: 'essential', ts: new Date().toISOString() }));
+  document.getElementById('consentBanner').style.display = 'none';
+}
+
+// Init
+checkAuth();
+checkConsent();
+
+// ===== ANALYSIS ENGINE =====
+const loadingMessages = [
+  "Analyzing federal constitutional provisions...",
+  "Cross-referencing state statutory definitions...",
+  "Checking municipal ordinance applicability...",
+  "Mapping prosecution element requirements...",
+  "Evaluating evidence chain integrity...",
+  "Calibrating confidence scores to motion viability...",
+  "Verifying citation accuracy...",
+  "Compiling defense vectors..."
+];
+let loadingInterval;
+
+function showError(msg) {
+  clearInterval(loadingInterval);
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('analyzeBtn').disabled = false;
+  document.getElementById('errorState').style.display = 'block';
+  document.getElementById('errorMsg').textContent = msg;
+}
+
+async function runAnalysis() {
+  const state = document.getElementById('stateSelect').value;
+  const county = document.getElementById('countyInput').value;
+  const charge = document.getElementById('chargeInput').value;
+  const situation = document.getElementById('situationInput').value;
+
+  if (!situation.trim() || situation.trim().length < 10) {
+    document.getElementById('situationInput').style.borderColor = 'var(--red)';
+    setTimeout(() => document.getElementById('situationInput').style.borderColor = '', 2000);
+    return;
+  }
+
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('resultsWrap').style.display = 'none';
+  document.getElementById('errorState').style.display = 'none';
+  document.getElementById('analyzeBtn').disabled = true;
+
+  let msgIdx = 0;
+  loadingInterval = setInterval(() => {
+    msgIdx = (msgIdx + 1) % loadingMessages.length;
+    document.getElementById('loadingSub').textContent = loadingMessages[msgIdx];
+  }, 2500);
+
+  // Get fresh token for auth
+  let authToken = '';
+  if (sb) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) authToken = session.access_token;
+  }
+
+  if (!authToken) {
+    showError('You must be signed in to run an analysis. Please sign in or create an account.');
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = false;
+    clearInterval(loadingInterval);
+    return;
+  }
+
+  const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken };
+
+  fetch("/api/analyze", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ state, county, charge, situation })
+  })
+  .then(r => {
+    if (!r.ok) return r.json().then(err => { throw new Error(err.error || 'Server returned ' + r.status); });
+    return r.json();
+  })
+  .then(data => {
+    clearInterval(loadingInterval);
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = false;
+
+    if (data.error) throw new Error(data.error.message || data.error || 'API returned an error');
+    if (!data.content || !Array.isArray(data.content)) throw new Error('Unexpected response format.');
+
+    const text = data.content.map(i => i.type === 'text' ? i.text : '').filter(Boolean).join('\n');
+    const clean = text.replace(/```json|```/g, '').trim();
+
+    let result;
+    try { result = JSON.parse(clean); }
+    catch (parseErr) {
+      console.error('JSON parse failed:', clean.slice(0, 1000));
+      throw new Error('Analysis returned malformed data. Please try again.');
+    }
+    renderResults(result);
+  })
+  .catch(err => {
+    showError('Analysis failed: ' + err.message);
+    console.error(err);
+  });
+}
+
+// ===== UTILITY FUNCTIONS =====
+function getSeverityClass(sev) {
+  if (!sev) return '';
+  const s = sev.toLowerCase();
+  if (s.includes('felony')) return 'severity-felony';
+  if (s.includes('misdemeanor')) return 'severity-misdemeanor';
+  if (s.includes('ordinance')) return 'severity-ordinance';
+  return 'severity-infraction';
+}
+function esc(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+function getCatClass(cat) { return cat ? 'cat-' + cat.toLowerCase().replace(/\s/g, '_') : ''; }
+function getTierBadge(tier) {
+  if (!tier) return '';
+  const t = tier.toLowerCase().replace(/[-\s]/g, '');
+  let cls = 'badge-state';
+  if (t.includes('federal')) cls = 'badge-federal';
+  else if (t.includes('municipal')) cls = 'badge-municipal';
+  else if (t.includes('cross') || t.includes('conflict')) cls = 'badge-cross-tier';
+  return `<span class="vector-tier-badge ${cls}">${esc(tier)}</span>`;
+}
+function getMotionBadge(mt) {
+  if (!mt) return '';
+  const t = mt.toLowerCase();
+  let cls = 'motion-weight';
+  if (t.includes('suppress')) cls = 'motion-suppression';
+  else if (t === 'both') cls = 'motion-both';
+  else if (t.includes('dismiss')) cls = 'motion-dismissal';
+  else if (t.includes('procedur')) cls = 'motion-procedural';
+  return `<span class="motion-badge ${cls}">${esc(mt)}</span>`;
+}
+function confClass(c) { return c >= 65 ? 'conf-high' : c >= 40 ? 'conf-med' : 'conf-low'; }
+function renderList(items, cls) {
+  if (!items || !items.length) return '<p style="color:var(--gray);font-size:.85rem">None identified</p>';
+  return `<ul class="result-list ${cls || ''}">${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>`;
+}
+function makeSection(id, title, bodyHtml, openByDefault) {
+  return `<div class="result-section"><div class="result-section-header" onclick="toggleSection('${id}')"><span class="result-section-title">${title}</span><span class="result-section-toggle ${openByDefault ? 'open' : ''}" id="toggle-${id}">▼</span></div><div class="result-section-body ${openByDefault ? 'open' : ''}" id="body-${id}">${bodyHtml}</div></div>`;
+}
+function toggleSection(id) {
+  document.getElementById('body-' + id).classList.toggle('open');
+  document.getElementById('toggle-' + id).classList.toggle('open');
+}
+
+// ===== RENDER RESULTS =====
+function renderResults(r) {
+  const wrap = document.getElementById('resultsWrap');
+  const ca = r.charge_analysis || {};
+  const ja = r.jurisdiction_analysis || {};
+  const vectors = r.inversion_vectors || [];
+  const conflicts = r.tier_conflict_opportunities || [];
+
+  let html = '<div class="results-wrap">';
+
+  html += '<div class="ai-badge">⚡ AI-Generated Analysis — Verify all citations before use in any proceeding</div>';
+
+  // Header
+  html += `<div class="result-header"><div class="result-header-top"><div class="result-offense">${esc(ca.offense) || 'Analysis Complete'}</div>${ca.severity_class ? `<span class="result-severity ${getSeverityClass(ca.severity_class)}">${esc(ca.severity_class)}</span>` : ''}</div><div class="result-meta">
+    ${ca.governing_statute ? `<div class="result-meta-item"><div class="result-meta-label">Governing Statute</div><div class="result-meta-value">${esc(ca.governing_statute)}</div></div>` : ''}
+    ${ca.jurisdiction ? `<div class="result-meta-item"><div class="result-meta-label">Jurisdiction</div><div class="result-meta-value">${esc(ca.jurisdiction)}</div></div>` : ''}
+    ${ca.county_or_city ? `<div class="result-meta-item"><div class="result-meta-label">County/City</div><div class="result-meta-value">${esc(ca.county_or_city)}</div></div>` : ''}
+    ${ca.court_type ? `<div class="result-meta-item"><div class="result-meta-label">Court Type</div><div class="result-meta-value">${esc(ca.court_type)}</div></div>` : ''}
+    ${ca.mens_rea ? `<div class="result-meta-item"><div class="result-meta-label">Mental State Required</div><div class="result-meta-value">${esc(ca.mens_rea)}</div></div>` : ''}
+    ${ca.potential_penalties ? `<div class="result-meta-item"><div class="result-meta-label">Potential Penalties</div><div class="result-meta-value">${esc(ca.potential_penalties)}</div></div>` : ''}
+  </div></div>`;
+
+  // Export toolbar
+  html += `<div class="export-bar"><button class="export-btn" onclick="exportPDF()"><svg viewBox="0 0 24 24"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,19L8,15H10.5V12H13.5V15H16L12,19Z"/></svg>Export PDF</button><button class="export-btn" onclick="exportEmail()"><svg viewBox="0 0 24 24"><path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z"/></svg>Email Results</button><button class="export-btn" onclick="copyResults()"><svg viewBox="0 0 24 24"><path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/></svg>Copy to Clipboard</button></div>`;
+
+  // Evidence Priorities
+  if (r.evidence_priorities?.length) {
+    let epHtml = r.evidence_priorities.map((e, i) => `<div class="evidence-card"><div class="evidence-rank">#${i+1}</div><div class="evidence-text">${esc(e)}</div></div>`).join('');
+    html += makeSection('evidence', `🔍 Evidence Priorities (${r.evidence_priorities.length})`, epHtml, true);
+  }
+
+  // Critical Deadlines
+  if (r.critical_deadlines?.length) {
+    let dlHtml = r.critical_deadlines.map(d => `<div class="deadline-item">${esc(d)}</div>`).join('');
+    html += makeSection('deadlines', '⏱ Critical Deadlines', dlHtml, true);
+  }
+
+  // Tier Conflicts
+  if (conflicts.length > 0) {
+    let conflictHtml = conflicts.map(c => `<div class="conflict-alert"><div class="conflict-alert-title">⚡ Tier Conflict Detected</div><div class="conflict-alert-text">${esc(c)}</div></div>`).join('');
+    html += makeSection('conflicts', `⚡ Tier Conflict Opportunities (${conflicts.length})`, conflictHtml, true);
+  }
+
+  // Three-Tier Analysis
+  if (ja.federal_provisions || ja.state_provisions || ja.municipal_provisions) {
+    const fp = ja.federal_provisions || {}, sp = ja.state_provisions || {}, mp = ja.municipal_provisions || {};
+    let tierHtml = '<div class="tier-grid">';
+    tierHtml += '<div class="tier-col"><div class="tier-col-label federal">⬥ Federal</div>';
+    if (fp.constitutional_issues?.length) tierHtml += fp.constitutional_issues.map(i => `<div class="tier-item">${esc(i)}</div>`).join('');
+    if (fp.federal_statutes?.length) tierHtml += fp.federal_statutes.map(i => `<div class="tier-item">${esc(i)}</div>`).join('');
+    if (fp.supreme_court_precedent?.length) tierHtml += fp.supreme_court_precedent.map(i => `<div class="tier-item">${esc(i)}</div>`).join('');
+    tierHtml += '</div>';
+    tierHtml += '<div class="tier-col"><div class="tier-col-label state">⬥ State</div>';
+    if (sp.state_code_sections?.length) tierHtml += sp.state_code_sections.map(i => `<div class="tier-item">${esc(i)}</div>`).join('');
+    if (sp.state_case_law?.length) tierHtml += sp.state_case_law.map(i => `<div class="tier-item">${esc(i)}</div>`).join('');
+    if (sp.state_procedure_rules?.length) tierHtml += sp.state_procedure_rules.map(i => `<div class="tier-item">${esc(i)}</div>`).join('');
+    tierHtml += '</div>';
+    tierHtml += '<div class="tier-col"><div class="tier-col-label municipal">⬥ Municipal</div>';
+    if (mp.local_ordinances?.length) tierHtml += mp.local_ordinances.map(i => `<div class="tier-item">${esc(i)}</div>`).join('');
+    if (mp.municipal_procedures?.length) tierHtml += mp.municipal_procedures.map(i => `<div class="tier-item">${esc(i)}</div>`).join('');
+    if (mp.penalty_schedule_differences?.length) tierHtml += mp.penalty_schedule_differences.map(i => `<div class="tier-item">${esc(i)}</div>`).join('');
+    tierHtml += '</div></div>';
+    html += makeSection('tiers', 'Three-Tier Jurisdictional Analysis', tierHtml, false);
+  }
+
+  // Prosecution Elements
+  if (ca.elements_required?.length) html += makeSection('elements', `Elements Prosecution Must Prove (${ca.elements_required.length})`, renderList(ca.elements_required), false);
+
+  // Inversion Vectors
+  if (vectors.length) {
+    let vectorHtml = vectors.map(v => {
+      let prereqHtml = '';
+      if (v.prerequisites?.length) {
+        prereqHtml = `<div class="vector-prereqs"><div class="vector-prereqs-label">Prerequisites — Confirm Before Relying On This Vector</div><ul>${v.prerequisites.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div>`;
+      }
+      // Citation verification badge
+      let citBadge = '';
+      let citNote = '';
+      if (v.citation_status) {
+        const cs = v.citation_status.toLowerCase();
+        if (cs.includes('blocked')) {
+          citBadge = '<span class="citation-badge citation-unverified">🚫 Known Hallucination</span>';
+        } else if (cs.includes('suspect')) {
+          citBadge = '<span class="citation-badge citation-unverified">⚠ Suspect Citation</span>';
+        } else if (cs.includes('verified') && !cs.includes('unverif')) {
+          citBadge = '<span class="citation-badge citation-verified">✓ Verified</span>';
+        } else if (cs.includes('not found') || cs.includes('unverified')) {
+          citBadge = '<span class="citation-badge citation-unverified">⚠ Not Verified</span>';
+        } else {
+          citBadge = '<span class="citation-badge citation-unverifiable">○ Unverifiable</span>';
+        }
+      }
+      if (v.confidence_note) {
+        citNote = `<div style="font-size:.75rem;color:var(--red);margin-top:.35rem;font-style:italic">${esc(v.confidence_note)}${v.original_confidence ? ' (original: ' + v.original_confidence + '%)' : ''}</div>`;
+      }
+      // Clickable law link
+      let lawHtml = '';
+      if (v.applicable_law) {
+        const citLinks = r.citation_verification?.citation_links || {};
+        const linkMatch = Object.keys(citLinks).find(k => v.applicable_law.toLowerCase().includes(k.toLowerCase().slice(0, 15)));
+        if (linkMatch && citLinks[linkMatch]?.url) {
+          lawHtml = `<div class="vector-law"><a href="${esc(citLinks[linkMatch].url)}" target="_blank" rel="noopener" style="color:var(--gold-dark);text-decoration:underline">${esc(v.applicable_law)}</a></div>`;
+        } else {
+          lawHtml = `<div class="vector-law">${esc(v.applicable_law)}</div>`;
+        }
+      }
+      // Flag citation button (Enhancement 5)
+      const flagBtn = v.applicable_law ? `<button class="export-btn" style="font-size:.7rem;padding:.25rem .5rem;margin-top:.5rem" onclick="flagCitation('${esc(v.applicable_law).replace(/'/g, "\\'")}', '${esc(v.title).replace(/'/g, "\\'")}')">🚩 Flag Citation</button>` : '';
+
+      return `<div class="vector-card"><div class="vector-top"><div><span class="vector-category ${getCatClass(v.category)}">${esc(v.category) || 'GENERAL'}</span>${getTierBadge(v.legal_tier)}${getMotionBadge(v.motion_type)}</div><span class="vector-confidence ${confClass(v.confidence)}">Confidence: ${parseInt(v.confidence) || 0}%</span></div><div class="vector-title">${esc(v.title)}${citBadge}</div>${lawHtml}<div class="vector-text">${esc(v.argument)}</div>${citNote}${prereqHtml}${flagBtn}</div>`;
+    }).join('');
+    html += makeSection('vectors', `Defense Inversion Vectors (${vectors.length})`, vectorHtml, true);
+  }
+
+  // Citation Verification Summary
+  if (r.citation_verification) {
+    const cv = r.citation_verification;
+    let cvHtml = '<div class="verification-summary">';
+    cvHtml += '<div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem">Citation Verification Report</div>';
+    if (cv.verification_rate !== null) {
+      const rateColor = cv.verification_rate >= 80 ? 'var(--green)' : cv.verification_rate >= 50 ? 'var(--gold)' : 'var(--red)';
+      cvHtml += `<div>Verification Rate: <span class="rate" style="color:${rateColor}">${cv.verification_rate}%</span> — ${cv.total_verified} verified, ${cv.total_not_found} not found</div>`;
+    }
+    if (cv.statute_source) {
+      cvHtml += `<div style="margin-top:.5rem;color:var(--green);font-size:.82rem">📜 ${esc(cv.statute_source)}</div>`;
+    }
+    if (cv.verified_citations?.length) {
+      cvHtml += '<div style="margin-top:.5rem;font-size:.82rem"><span style="color:var(--green)">✓ Verified:</span> ';
+      cvHtml += cv.verified_citations.map(c => {
+        const link = cv.citation_links?.[c];
+        return link?.url ? `<a href="${esc(link.url)}" target="_blank" rel="noopener" style="color:var(--green);text-decoration:underline">${esc(c)}</a>` : esc(c);
+      }).join(', ');
+      cvHtml += '</div>';
+    }
+    if (cv.not_found_citations?.length) {
+      cvHtml += '<div style="margin-top:.35rem;color:var(--red);font-size:.82rem">⚠ Not Found: ' + cv.not_found_citations.map(c => esc(c)).join(', ') + '</div>';
+    }
+    if (cv.blocked_citations?.length) {
+      cvHtml += '<div style="margin-top:.35rem;color:var(--red);font-size:.82rem">🚫 Known Hallucinations (flagged ' + cv.blocked_citations.length + ' times): ' + cv.blocked_citations.map(c => esc(c)).join(', ') + '</div>';
+    }
+    if (cv.dual_model_check?.length) {
+      const suspect = cv.dual_model_check.filter(c => !c.real);
+      if (suspect.length > 0) {
+        cvHtml += '<div style="margin-top:.35rem;color:var(--red);font-size:.82rem">🔄 Dual-Model Flagged: ' + suspect.map(c => esc(c.citation)).join(', ') + '</div>';
+      }
+    }
+    if (cv.warning) {
+      cvHtml += `<div class="warn">${esc(cv.warning)}</div>`;
+    }
+    cvHtml += '</div>';
+    html += makeSection('citations', '🔍 Citation Verification', cvHtml, true);
+  }
+
+  if (r.statutory_escape_hatches?.length) html += makeSection('hatches', 'Statutory Escape Hatches', renderList(r.statutory_escape_hatches), false);
+  if (r.prosecution_weaknesses?.length) html += makeSection('weaknesses', 'Prosecution Weaknesses', renderList(r.prosecution_weaknesses), false);
+  if (r.recommended_motions?.length) html += makeSection('motions', 'Recommended Motions', renderList(r.recommended_motions, 'motions'), false);
+  if (r.critical_warnings?.length) html += makeSection('warnings', '⚠ Critical Warnings', renderList(r.critical_warnings, 'warnings'), true);
+
+  html += '</div>';
+  wrap.innerHTML = html;
+  wrap.style.display = 'block';
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // ===== FREEMIUM BLUR: Free users see header + vector count, everything else blurred =====
+  if (userTier === 'none') {
+    // Find all sections after the header and export bar
+    var sections = wrap.querySelectorAll('.result-section');
+    var vectorCount = (r.inversion_vectors || []).length;
+    var conflictCount = (r.tier_conflict_opportunities || []).length;
+
+    sections.forEach(function(section) {
+      section.classList.add('paywall-blur');
+      var overlay = document.createElement('div');
+      overlay.className = 'paywall-overlay';
+      overlay.innerHTML = '<a href="/#pricing" class="unlock-btn">🔓 Unlock Full Analysis</a><p>' + vectorCount + ' defense vectors and ' + conflictCount + ' tier conflicts found — subscribe to view</p>';
+      section.appendChild(overlay);
+    });
+
+    // Hide export bar for free users
+    var exportBar = wrap.querySelector('.export-bar');
+    if (exportBar) exportBar.style.display = 'none';
+
+    // Add upgrade prompt above results
+    var promoDiv = document.createElement('div');
+    promoDiv.className = 'paywall-count';
+    promoDiv.innerHTML = '⚡ Inveritas found <strong>' + vectorCount + ' defense vectors</strong>' + (conflictCount > 0 ? ' and <strong>' + conflictCount + ' tier conflicts</strong>' : '') + ' for your case. <a href="/#pricing" style="color:var(--gold);font-weight:700">Unlock the full analysis →</a>';
+    wrap.querySelector('.results-wrap').insertBefore(promoDiv, wrap.querySelector('.results-wrap').children[2]);
+  }
+
+  window._lastResult = r;
+  window._lastMeta = { state: document.getElementById('stateSelect').value, county: document.getElementById('countyInput').value, charge: document.getElementById('chargeInput').value };
+}
+
+// ===== EXPORTS =====
+function showToast(msg) { const t = document.getElementById('exportToast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+function exportPDF() { document.querySelectorAll('.result-section-body').forEach(b => b.classList.add('open')); document.querySelectorAll('.result-section-toggle').forEach(t => t.classList.add('open')); window.print(); }
+
+function exportEmail() {
+  const r = window._lastResult, m = window._lastMeta; if (!r) return;
+  const ca = r.charge_analysis || {}, vectors = r.inversion_vectors || [], conflicts = r.tier_conflict_opportunities || [];
+  let body = `INVERITAS - Statutory Inversion Analysis\n========================================\n\nCharge: ${ca.offense || 'N/A'}\nSeverity: ${ca.severity_class || 'N/A'}\nMental State: ${ca.mens_rea || 'N/A'}\nJurisdiction: ${m.state || 'N/A'}\nCounty/City: ${m.county || 'N/A'}\nGoverning Statute: ${ca.governing_statute || 'N/A'}\nCourt Type: ${ca.court_type || 'N/A'}\nPotential Penalties: ${ca.potential_penalties || 'N/A'}\n\n`;
+  if (r.evidence_priorities?.length) { body += `EVIDENCE PRIORITIES\n----------------------------------------\n`; r.evidence_priorities.forEach((e,i) => { body += `${i+1}. ${e}\n`; }); body += '\n'; }
+  if (r.critical_deadlines?.length) { body += `CRITICAL DEADLINES\n----------------------------------------\n`; r.critical_deadlines.forEach((d,i) => { body += `${i+1}. ${d}\n`; }); body += '\n'; }
+  if (conflicts.length) { body += `TIER CONFLICTS (${conflicts.length})\n----------------------------------------\n`; conflicts.forEach((c,i) => { body += `${i+1}. ${c}\n`; }); body += '\n'; }
+  if (vectors.length) { body += `DEFENSE VECTORS (${vectors.length})\n----------------------------------------\n`; vectors.forEach((v,i) => { body += `\n${i+1}. [${v.category}] [${v.motion_type||''}] ${v.title} (${v.confidence}%)\n   Law: ${v.applicable_law||'N/A'}\n   ${v.argument}\n`; if (v.prerequisites?.length) { body += `   Prerequisites: ${v.prerequisites.join('; ')}\n`; } }); body += '\n'; }
+  if (r.recommended_motions?.length) { body += `RECOMMENDED MOTIONS\n----------------------------------------\n`; r.recommended_motions.forEach((x,i) => { body += `${i+1}. ${x}\n`; }); body += '\n'; }
+  if (r.critical_warnings?.length) { body += `CRITICAL WARNINGS\n----------------------------------------\n`; r.critical_warnings.forEach((w,i) => { body += `${i+1}. ${w}\n`; }); body += '\n'; }
+  body += `\n========================================\nGenerated by Inveritas - inveritaslaw.com\nAI-generated analysis. Verify all citations.\nThis is not legal advice. Consult a licensed attorney.\n`;
+  const subject = `Inveritas Analysis: ${ca.offense || m.charge || 'Defense Analysis'} - ${m.state}`;
+  window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+}
+
+function copyResults() {
+  const r = window._lastResult, m = window._lastMeta; if (!r) return;
+  const ca = r.charge_analysis || {}, vectors = r.inversion_vectors || [], conflicts = r.tier_conflict_opportunities || [];
+  let text = `INVERITAS - Statutory Inversion Analysis\n========================================\n\nCharge: ${ca.offense||'N/A'}\nSeverity: ${ca.severity_class||'N/A'} | Mental State: ${ca.mens_rea||'N/A'}\nJurisdiction: ${m.state} / ${m.county||'N/A'}\nStatute: ${ca.governing_statute||'N/A'}\nPenalties: ${ca.potential_penalties||'N/A'}\n\n`;
+  if (r.evidence_priorities?.length) { text += `EVIDENCE PRIORITIES:\n`; r.evidence_priorities.forEach((e,i) => { text += `  ${i+1}. ${e}\n`; }); text += '\n'; }
+  if (r.critical_deadlines?.length) { text += `DEADLINES:\n`; r.critical_deadlines.forEach((d,i) => { text += `  ${i+1}. ${d}\n`; }); text += '\n'; }
+  if (conflicts.length) { text += `TIER CONFLICTS:\n`; conflicts.forEach((c,i) => { text += `  ${i+1}. ${c}\n`; }); text += '\n'; }
+  vectors.forEach((v,i) => { text += `VECTOR ${i+1}: [${v.category}] [${v.motion_type||''}] ${v.title} (${v.confidence}%)\n  ${v.applicable_law||''}\n  ${v.argument}\n`; if (v.prerequisites?.length) { text += `  Prerequisites: ${v.prerequisites.join('; ')}\n`; } text += '\n'; });
+  if (r.recommended_motions?.length) { text += `MOTIONS:\n`; r.recommended_motions.forEach((x,i) => { text += `  ${i+1}. ${x}\n`; }); text += '\n'; }
+  if (r.critical_warnings?.length) { text += `WARNINGS:\n`; r.critical_warnings.forEach((w,i) => { text += `  ${i+1}. ${w}\n`; }); }
+  text += `\n— Generated by Inveritas (inveritaslaw.com)\nAI-generated. Verify all citations. Not legal advice.\n`;
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard')).catch(() => { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); showToast('Copied to clipboard'); });
+}
+
+// ===== ENHANCEMENT 5: FLAG CITATION (Attorney Feedback Loop) =====
+async function flagCitation(citation, vectorTitle) {
+  if (!currentSession) { showToast('Sign in to flag citations', true); return; }
+  if (!confirm('Flag "' + citation + '" as potentially hallucinated or inaccurate?\n\nThis will submit it for review and help improve future analyses.')) return;
+  try {
+    const resp = await fetch('/api/platform?action=citation-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentSession.access_token },
+      body: JSON.stringify({
+        citation_text: citation,
+        vector_title: vectorTitle,
+        feedback_type: 'hallucinated'
+      })
+    });
+    if (resp.ok) {
+      showToast('Citation flagged — thank you for improving Inveritas');
+    } else {
+      const data = await resp.json();
+      showToast(data.error || 'Failed to flag citation', true);
+    }
+  } catch(e) {
+    showToast('Failed to submit flag', true);
+  }
+}
+</script>
+</body>
+</html>

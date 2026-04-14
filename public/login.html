@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inveritas — Sign In</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--navy-deep:#060E1A;--navy:#0A1628;--navy-mid:#0F2140;--navy-light:#1A3158;--gold:#D4A843;--gold-light:#E8C76A;--gold-dark:#B8912E;--gold-muted:rgba(212,168,67,0.15);--white:#F2F0ED;--white-pure:#FFF;--gray:#8A99AB;--gray-light:#C5CDD8;--red:#E85D5D;--green:#5DE8A0;--font-display:'Cormorant Garamond',Georgia,serif;--font-body:'DM Sans',-apple-system,sans-serif}
+body{background:var(--navy-deep);color:var(--white);font-family:var(--font-body);min-height:100vh;display:flex;align-items:center;justify-content:center;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
+
+.auth-container{width:100%;max-width:420px;padding:2rem}
+.auth-logo{text-align:center;margin-bottom:2.5rem}
+.auth-logo a{text-decoration:none;display:inline-flex;align-items:center;gap:.75rem}
+.auth-logo-text{font-family:var(--font-display);font-size:1.8rem;font-weight:600;color:var(--white);letter-spacing:.08em}
+.auth-card{background:rgba(15,33,64,0.4);border:1px solid rgba(212,168,67,0.12);border-radius:4px;padding:2.5rem 2rem;position:relative}
+.auth-tabs{display:flex;margin-bottom:2rem;border-bottom:1px solid rgba(212,168,67,.1)}
+.auth-tab{flex:1;padding:.75rem;text-align:center;font-size:.85rem;font-weight:600;letter-spacing:.04em;color:var(--gray);cursor:pointer;border-bottom:2px solid transparent;transition:all .3s}
+.auth-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.auth-tab:hover{color:var(--gold-light)}
+
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:.4rem}
+.form-input{width:100%;background:rgba(6,14,26,0.8);border:1px solid rgba(212,168,67,0.12);border-radius:3px;padding:.75rem 1rem;color:var(--white);font-family:var(--font-body);font-size:.9rem;transition:border-color .3s;outline:none}
+.form-input:focus{border-color:var(--gold)}
+.form-input::placeholder{color:var(--gray)}
+
+.tos-check{display:flex;align-items:flex-start;gap:.6rem;margin:1.5rem 0;font-size:.82rem;color:var(--gray-light);line-height:1.5}
+.tos-check input[type="checkbox"]{margin-top:3px;accent-color:var(--gold);width:16px;height:16px;cursor:pointer;flex-shrink:0}
+.tos-check a{color:var(--gold)}
+
+.btn{display:block;width:100%;padding:.85rem;font-family:var(--font-body);font-size:.9rem;font-weight:600;letter-spacing:.04em;border-radius:3px;border:none;cursor:pointer;transition:all .3s;text-align:center}
+.btn-gold{background:var(--gold);color:var(--navy-deep)}
+.btn-gold:hover{background:var(--gold-light);box-shadow:0 8px 30px rgba(212,168,67,.3)}
+.btn-gold:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+
+.auth-msg{padding:.75rem 1rem;border-radius:3px;font-size:.85rem;margin-bottom:1rem;display:none}
+.auth-msg.error{display:block;background:rgba(232,93,93,.08);border:1px solid rgba(232,93,93,.3);color:var(--red)}
+.auth-msg.success{display:block;background:rgba(93,232,160,.08);border:1px solid rgba(93,232,160,.3);color:var(--green)}
+
+.auth-footer{text-align:center;margin-top:1.5rem;font-size:.82rem;color:var(--gray)}
+.auth-footer a{color:var(--gold);text-decoration:none}
+.auth-footer a:hover{text-decoration:underline}
+
+.auth-panel{display:none}
+.auth-panel.active{display:block}
+
+.divider{text-align:center;margin:1.5rem 0;color:var(--gray);font-size:.8rem;position:relative}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:rgba(212,168,67,.1)}
+.divider::before{left:0}
+.divider::after{right:0}
+
+.password-reset-link{display:block;text-align:right;font-size:.78rem;color:var(--gold);text-decoration:none;margin-top:.25rem}
+.password-reset-link:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="auth-container">
+  <div class="auth-logo">
+    <a href="/">
+      <svg width="36" height="36" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" rx="64" fill="#0A1628"/><path d="M256,60 L380,90 L380,280 C380,360 325,420 256,450 C187,420 132,360 132,280 L132,90 Z" fill="#0F2140" stroke="#D4A843" stroke-width="4"/><line x1="190" y1="230" x2="322" y2="208" stroke="#D4A843" stroke-width="4" stroke-linecap="round"/><polygon points="256,195 247,215 265,215" fill="#D4A843"/><path d="M170,246 Q190,268 210,246" fill="none" stroke="#D4A843" stroke-width="3"/><path d="M302,224 Q322,246 342,224" fill="none" stroke="#D4A843" stroke-width="3"/></svg>
+      <span class="auth-logo-text">INVERITAS</span>
+    </a>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchTab('login')">Sign In</div>
+      <div class="auth-tab" onclick="switchTab('signup')">Create Account</div>
+      <div class="auth-tab" id="studentTabBtn" onclick="switchTab('student')">🎓 Law Student</div>
+    </div>
+
+    <div id="authMsg" class="auth-msg"></div>
+
+    <!-- LOGIN PANEL -->
+    <div id="loginPanel" class="auth-panel active">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+        <a href="#" class="password-reset-link" onclick="resetPassword(event)">Forgot password?</a>
+      </div>
+      <button class="btn btn-gold" id="loginBtn" onclick="doLogin()">Sign In</button>
+    </div>
+
+    <!-- SIGNUP PANEL -->
+    <div id="signupPanel" class="auth-panel">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="signupEmail" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="signupPassword" placeholder="Min 8 characters" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input type="password" class="form-input" id="signupConfirm" placeholder="Confirm password" autocomplete="new-password">
+      </div>
+      <div class="tos-check">
+        <input type="checkbox" id="tosAccept">
+        <label for="tosAccept">I have read and agree to the <a href="/terms.html" target="_blank">Terms of Service</a>, <a href="/privacy.html" target="_blank">Privacy Policy</a>, and <a href="/cookies.html" target="_blank">Cookie Policy</a>. I consent to the collection and use of my data as described therein.</label>
+      </div>
+      <button class="btn btn-gold" id="signupBtn" onclick="doSignup()">Create Account</button>
+    </div>
+
+    <!-- STUDENT PANEL -->
+    <div id="studentPanel" class="auth-panel">
+      <div style="background:rgba(93,232,160,.06);border:1px solid rgba(93,232,160,.2);border-radius:3px;padding:1rem;margin-bottom:1.25rem;font-size:.82rem;color:var(--green);line-height:1.6">
+        <strong>Free access for law students.</strong> Sign up with your .edu email and upload a current university document (student ID, enrollment letter, or transcript) to verify your status.
+      </div>
+      <div class="form-group">
+        <label class="form-label">School Email (.edu)</label>
+        <input type="email" class="form-input" id="studentEmail" placeholder="you@lawschool.edu" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="studentPassword" placeholder="Min 8 characters" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input type="password" class="form-input" id="studentConfirm" placeholder="Confirm password" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">University Document</label>
+        <input type="file" class="form-input" id="studentDoc" accept=".pdf,.jpg,.jpeg,.png" style="padding:.5rem">
+        <div style="font-size:.72rem;color:var(--gray);margin-top:.25rem">Student ID, enrollment verification, or current transcript (PDF, JPG, PNG — max 5MB)</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Law School Name</label>
+        <input type="text" class="form-input" id="studentSchool" placeholder="e.g. University of Texas School of Law">
+      </div>
+      <div class="tos-check">
+        <input type="checkbox" id="studentTos">
+        <label for="studentTos">I have read and agree to the <a href="/terms.html" target="_blank">Terms of Service</a>, <a href="/privacy.html" target="_blank">Privacy Policy</a>, and <a href="/cookies.html" target="_blank">Cookie Policy</a>. I certify that I am a currently enrolled law student.</label>
+      </div>
+      <button class="btn btn-gold" id="studentBtn" onclick="doStudentSignup()" style="background:var(--green);color:var(--navy-deep)">Create Student Account</button>
+    </div>
+  </div>
+
+  <div class="auth-footer">
+    <a href="/">← Back to Inveritas</a>
+  </div>
+</div>
+
+<!-- SUPABASE CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// Initialize Supabase — these are PUBLIC keys (safe to expose, RLS controls access)
+const SUPABASE_URL = 'https://dmkuskjfvnniqpjmlnmz.supabase.co'; // Replace after setup
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRta3Vza2pmdm5uaXFwam1sbm16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NzcwMzIsImV4cCI6MjA5MDM1MzAzMn0.F7vzx6RwdnpT9DB1LT1y5uP9WXdWNpcytwSFFsv7D4o'; // Replace after setup
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Check if already logged in
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    window.location.href = '/dashboard.html';
+  }
+  // Auto-switch to student tab if ?student=true
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('student') === 'true') {
+    switchTab('student');
+  }
+})();
+
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+  if (tab === 'login') {
+    document.querySelector('.auth-tab:first-child').classList.add('active');
+    document.getElementById('loginPanel').classList.add('active');
+  } else if (tab === 'student') {
+    document.getElementById('studentTabBtn').classList.add('active');
+    document.getElementById('studentPanel').classList.add('active');
+  } else {
+    document.querySelectorAll('.auth-tab')[1].classList.add('active');
+    document.getElementById('signupPanel').classList.add('active');
+  }
+  hideMsg();
+}
+
+function showMsg(text, type) {
+  const m = document.getElementById('authMsg');
+  m.textContent = text;
+  m.className = 'auth-msg ' + type;
+}
+function hideMsg() {
+  document.getElementById('authMsg').className = 'auth-msg';
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  
+  if (!email || !password) { showMsg('Enter email and password.', 'error'); return; }
+  
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+
+    // Log the login event
+    await logEvent('login', { email });
+    
+    window.location.href = '/dashboard.html';
+  } catch (err) {
+    showMsg(err.message || 'Login failed.', 'error');
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+}
+
+async function doSignup() {
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+  const confirm = document.getElementById('signupConfirm').value;
+  const tosAccepted = document.getElementById('tosAccept').checked;
+
+  if (!email || !password) { showMsg('Enter email and password.', 'error'); return; }
+  if (password.length < 8) { showMsg('Password must be at least 8 characters.', 'error'); return; }
+  if (password !== confirm) { showMsg('Passwords do not match.', 'error'); return; }
+  if (!tosAccepted) { showMsg('You must accept the Terms of Service, Privacy Policy, and Cookie Policy to create an account.', 'error'); return; }
+
+  const btn = document.getElementById('signupBtn');
+  btn.disabled = true; btn.textContent = 'Creating account...';
+
+  try {
+    const { data, error } = await sb.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        data: {
+          tos_accepted: true,
+          tos_accepted_at: new Date().toISOString(),
+          privacy_accepted: true,
+          cookie_accepted: true
+        }
+      }
+    });
+    if (error) throw error;
+
+    // Log consent and signup
+    await logEvent('signup', { email });
+    await logEvent('consent_tos', { email, version: '2026-03-29' });
+    await logEvent('consent_privacy', { email, version: '2026-03-29' });
+    await logEvent('consent_cookies', { email, version: '2026-03-29' });
+
+    if (data.session) {
+      // Auto-confirmed — redirect to analysis
+      window.location.href = '/dashboard.html';
+    } else {
+      // Email confirmation required
+      showMsg('Account created! Check your email to confirm, then sign in.', 'success');
+      btn.disabled = false; btn.textContent = 'Create Account';
+    }
+  } catch (err) {
+    showMsg(err.message || 'Signup failed.', 'error');
+    btn.disabled = false; btn.textContent = 'Create Account';
+  }
+}
+
+async function resetPassword(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) { showMsg('Enter your email first, then click Forgot password.', 'error'); return; }
+  
+  try {
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/login.html'
+    });
+    if (error) throw error;
+    showMsg('Password reset link sent to ' + email, 'success');
+  } catch (err) {
+    showMsg(err.message || 'Reset failed.', 'error');
+  }
+}
+
+// Log events to server
+async function logEvent(eventType, metadata) {
+  try {
+    await fetch('/api/log-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event: eventType, metadata })
+    });
+  } catch (e) { /* non-critical */ }
+}
+
+// Student signup
+async function doStudentSignup() {
+  const email = document.getElementById('studentEmail').value.trim();
+  const password = document.getElementById('studentPassword').value;
+  const confirm = document.getElementById('studentConfirm').value;
+  const tosAccepted = document.getElementById('studentTos').checked;
+  const school = document.getElementById('studentSchool').value.trim();
+  const docFile = document.getElementById('studentDoc').files[0];
+
+  if (!email || !password) { showMsg('Enter email and password.', 'error'); return; }
+  if (!email.endsWith('.edu')) { showMsg('Student accounts require a .edu email address.', 'error'); return; }
+  if (password.length < 8) { showMsg('Password must be at least 8 characters.', 'error'); return; }
+  if (password !== confirm) { showMsg('Passwords do not match.', 'error'); return; }
+  if (!school) { showMsg('Enter your law school name.', 'error'); return; }
+  if (!docFile) { showMsg('Upload a university document to verify student status.', 'error'); return; }
+  if (docFile.size > 5 * 1024 * 1024) { showMsg('Document must be under 5MB.', 'error'); return; }
+  if (!tosAccepted) { showMsg('You must accept the Terms and certify student status.', 'error'); return; }
+
+  const btn = document.getElementById('studentBtn');
+  btn.disabled = true; btn.textContent = 'Creating student account...';
+
+  try {
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          tos_accepted: true,
+          tos_accepted_at: new Date().toISOString(),
+          privacy_accepted: true,
+          cookie_accepted: true,
+          account_type: 'student',
+          school_name: school,
+          student_verified: false,
+          student_doc_submitted: true
+        }
+      }
+    });
+    if (error) throw error;
+
+    await logEvent('student_signup', { email, school });
+    await logEvent('consent_tos', { email, version: '2026-04-03' });
+
+    // Upload student document to admin review queue
+    if (data.user && docFile) {
+      try {
+        const fileExt = docFile.name.split('.').pop();
+        const filePath = 'student-verification/' + data.user.id + '/' + Date.now() + '.' + fileExt;
+        await sb.storage.from('evidence').upload(filePath, docFile, {
+          contentType: docFile.type,
+          upsert: false
+        });
+        await logEvent('student_doc_uploaded', { email, file: filePath });
+      } catch (uploadErr) {
+        // Non-critical — admin can request doc later
+        console.error('Doc upload failed:', uploadErr);
+      }
+    }
+
+    if (data.session) {
+      window.location.href = '/dashboard.html';
+    } else {
+      showMsg('Student account created! Check your .edu email to confirm, then sign in. Your student status will be verified within 24 hours.', 'success');
+      btn.disabled = false; btn.textContent = 'Create Student Account';
+    }
+  } catch (err) {
+    showMsg(err.message || 'Student signup failed.', 'error');
+    btn.disabled = false; btn.textContent = 'Create Student Account';
+  }
+}
+
+// Enter key support
+document.getElementById('loginPassword').addEventListener('keypress', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('signupConfirm').addEventListener('keypress', e => { if (e.key === 'Enter') doSignup(); });
+document.getElementById('studentConfirm').addEventListener('keypress', e => { if (e.key === 'Enter') doStudentSignup(); });
+</script>
+</body>
+</html>

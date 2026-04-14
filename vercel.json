@@ -1,0 +1,50 @@
+{
+  "version": 2,
+  "buildCommand": "",
+  "outputDirectory": "public",
+  "functions": {
+    "api/analyze.js": { "maxDuration": 60 },
+    "api/reanalyze.js": { "maxDuration": 60 },
+    "api/cases.js": { "maxDuration": 10 },
+    "api/evidence.js": { "maxDuration": 30 },
+    "api/admin.js": { "maxDuration": 15 },
+    "api/blog.js": { "maxDuration": 10 },
+    "api/create-checkout.js": { "maxDuration": 10 },
+    "api/stripe-webhook.js": { "maxDuration": 10 },
+    "api/health.js": { "maxDuration": 5 },
+    "api/log-event.js": { "maxDuration": 5 },
+    "api/generate-motion.js": { "maxDuration": 60 },
+    "api/platform.js": { "maxDuration": 45 }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/admin.html",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/generate.html",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    }
+  ]
+}

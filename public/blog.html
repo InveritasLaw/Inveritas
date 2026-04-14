@@ -103,7 +103,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:r
 
 .blog-container{max-width:1200px}
 .blog-footer{max-width:1200px}
-.footer-crosslinks{font-size:.75rem}.footer-crosslinks a{color:var(--gray);text-decoration:none;transition:color .3s}.footer-crosslinks a:hover{color:var(--gold)}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-031BN237WH"></script>
@@ -213,7 +212,7 @@ async function loadPosts() {
     var posts = data.posts || [];
 
     if (posts.length === 0) {
-      document.getElementById('blogPosts').innerHTML = '<div class="empty-state"><h3>Coming Soon</h3><p>The Inversion Brief is launching soon. Check back for weekly statutory inversion breakdowns and defense strategy analysis.</p></div>';
+      document.getElementById('blogPosts').innerHTML = '<div class="post-card" onclick="window.location.href=\'/blog/texas-dwi-statutory-inversion-defense\'"><h3 class="post-card-title">Your Texas DWI Is Not What You Think It Is</h3><p class="post-card-excerpt">Five statutory inversion defense vectors hidden in Texas Penal Code § 49.04 that most attorneys miss entirely.</p><div class="post-card-meta">The Inversion Brief · Issue #002</div></div><div class="post-card" onclick="window.location.href=\'/blog/texas-assault-three-crimes-statutory-inversion\'"><h3 class="post-card-title">Texas Assault\'s 3 Statutory Inversions</h3><p class="post-card-excerpt">Three distinct offenses hiding inside Texas Penal Code § 22.01 — each with different elements, different defenses, and different inversion opportunities.</p><div class="post-card-meta">The Inversion Brief · Issue #003</div></div>';
       return;
     }
 

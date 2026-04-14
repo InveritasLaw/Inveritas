@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "cleanUrls": true,
   "buildCommand": "",
   "outputDirectory": "public",
   "functions": {
@@ -35,13 +36,13 @@
       ]
     },
     {
-      "source": "/admin.html",
+      "source": "/admin",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
     },
     {
-      "source": "/generate.html",
+      "source": "/generate",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]

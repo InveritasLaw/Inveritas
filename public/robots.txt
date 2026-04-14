@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /blog.html
+Disallow: /api/
+Disallow: /admin.html
+Disallow: /dashboard.html
+Disallow: /login.html
+Disallow: /success.html
+
+Sitemap: https://inveritaslaw.com/sitemap.xml

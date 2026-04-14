@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inveritas — Legal Defense Analysis Engine</title>
-<meta name="description" content="AI-powered statutory inversion analysis across federal, state, and municipal jurisdictions.">
+<title>Statutory Inversion Engine — Inveritas Legal Defense Analysis</title>
+<meta name="description" content="Run AI-powered statutory inversion analysis across federal, state, and municipal law. Surface defense vectors, tier conflicts, and prosecution weaknesses in 90 seconds.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -235,12 +235,42 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:r
   .container{max-width:100%!important;padding:0 1rem!important}
   @page{margin:1.5cm;size:A4}
 }
+
+.nav-signin{padding:.5rem 1.25rem}
+.nav-user-email{color:var(--gray-light);font-size:.82rem}
+.nav-signout{color:var(--gold);background:none;border:none;cursor:pointer;font-family:var(--font-body);font-size:.85rem;font-weight:500}
+.none-text{color:var(--gray);font-size:.85rem}
+.cit-note{font-size:.75rem;color:var(--red);margin-top:.35rem;font-style:italic}
+.cit-link{color:var(--gold-dark);text-decoration:underline}
+.flag-btn{font-size:.7rem;padding:.25rem .5rem;margin-top:.5rem}
+.cv-label{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem}
+.cv-line{margin-top:.5rem;font-size:.82rem}
+.cv-line-red{margin-top:.35rem;color:var(--red);font-size:.82rem}
+.cv-verified-link{color:var(--green);text-decoration:underline}
+.cv-green{color:var(--green)}
+.promo-link{color:var(--gold);font-weight:700}
+.footer-crosslinks{font-size:.75rem}.footer-crosslinks a{color:var(--gray);text-decoration:none;transition:color .3s}.footer-crosslinks a:hover{color:var(--gold)}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-031BN237WH"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","G-031BN237WH");</script>
 <!-- Search Atlas Dynamic Optimization -->
 <script nowprocket nitro-exclude type="text/javascript" id="sa-dynamic-optimization" data-uuid="a19b2a38-5f3e-47d9-ba45-14fbb8e93ca9" src="data:text/javascript;base64,dmFyIHNjcmlwdCA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoInNjcmlwdCIpO3NjcmlwdC5zZXRBdHRyaWJ1dGUoIm5vd3Byb2NrZXQiLCAiIik7c2NyaXB0LnNldEF0dHJpYnV0ZSgibml0cm8tZXhjbHVkZSIsICIiKTtzY3JpcHQuc3JjID0gImh0dHBzOi8vZGFzaGJvYXJkLnNlYXJjaGF0bGFzLmNvbS9zY3JpcHRzL2R5bmFtaWNfb3B0aW1pemF0aW9uLmpzIjtzY3JpcHQuZGF0YXNldC51dWlkID0gImExOWIyYTM4LTVmM2UtNDdkOS1iYTQ1LTE0ZmJiOGU5M2NhOSI7c2NyaXB0LmlkID0gInNhLWR5bmFtaWMtb3B0aW1pemF0aW9uLWxvYWRlciI7ZG9jdW1lbnQuaGVhZC5hcHBlbmRDaGlsZChzY3JpcHQpOw=="></script>
+<link rel="canonical" href="https://inveritaslaw.com/analyze">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://inveritaslaw.com/analyze">
+<meta property="og:title" content="Statutory Inversion Engine — Inveritas Legal Defense Analysis">
+<meta property="og:description" content="Run AI-powered statutory inversion analysis across federal, state, and municipal law. Surface defense vectors, tier conflicts, and prosecution weaknesses in 90 seconds.">
+<meta property="og:image" content="https://inveritaslaw.com/assets/inveritas-logo-dark.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@inveritaslaw">
+<meta name="twitter:title" content="Statutory Inversion Engine — Inveritas Legal Defense Analysis">
+<meta name="twitter:description" content="Run AI-powered statutory inversion analysis across federal, state, and municipal law. Surface defense vectors, tier conflicts, and prosecution weaknesses in 90 seconds.">
+<meta name="twitter:image" content="https://inveritaslaw.com/assets/inveritas-logo-dark.png">
+<meta name="keywords" content="legal defense AI, statutory inversion, criminal defense, defense vectors, legal tech, Inveritas">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Inveritas Statutory Inversion Engine","url":"https://inveritaslaw.com/analyze","applicationCategory":"LegalService","operatingSystem":"Web","description":"Three-tier statutory inversion analysis engine covering federal, state, and municipal law. Surfaces defense vectors, tier conflicts, and prosecution weaknesses.","publisher":{"@type":"Organization","name":"Inveritas","url":"https://inveritaslaw.com"}}
+</script>
 </head>
 <body>
 
@@ -249,7 +279,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:r
   <div class="auth-gate-inner">
     <h2>Sign in to access the<br>Statutory Inversion Engine</h2>
     <p>Authentication required to run analyses.</p>
-    <a href="/login.html" class="btn">Sign In / Create Account</a>
+    <a href="/login" class="btn">Sign In / Create Account</a>
   </div>
 </div>
 
@@ -268,9 +298,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:r
     </a>
     <ul class="nav-links">
       <li><a href="/">Home</a></li>
-      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
       <li><a href="/#pricing">Pricing</a></li>
-      <li id="navAuthLinks"><a href="/login.html" class="btn btn-gold" style="padding:.5rem 1.25rem">Sign In</a></li>
+      <li id="navAuthLinks"><a href="/login" class="btn btn-gold" class="nav-signin">Sign In</a></li>
     </ul>
   </div>
 </nav>
@@ -336,9 +366,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:r
   <div class="consent-inner">
     <div class="consent-text">
       This site uses cookies and collects data (IP address, browser, device information) to operate and improve the service. By clicking "Accept All," you agree to our
-      <a href="/terms.html" target="_blank">Terms of Service</a>,
-      <a href="/privacy.html" target="_blank">Privacy Policy</a>, and
-      <a href="/cookies.html" target="_blank">Cookie Policy</a>, including the collection and use of your data as described therein.
+      <a href="/terms" target="_blank">Terms of Service</a>,
+      <a href="/privacy" target="_blank">Privacy Policy</a>, and
+      <a href="/cookies" target="_blank">Cookie Policy</a>, including the collection and use of your data as described therein.
     </div>
     <div class="consent-btns">
       <button class="consent-btn consent-reject" onclick="rejectConsent()">Essential Only</button>
@@ -381,7 +411,7 @@ async function checkAuth() {
   document.getElementById('analysisForm').style.display = 'block';
   document.getElementById('analyzeBtn').disabled = false;
   // Swap nav: replace Sign In button with email + Sign Out
-  document.getElementById('navAuthLinks').innerHTML = '<span style="color:var(--gray-light);font-size:.82rem">' + session.user.email + '</span> &nbsp;<button onclick="signOut()" style="color:var(--gold);background:none;border:none;cursor:pointer;font-family:var(--font-body);font-size:.85rem;font-weight:500">Sign Out</button>';
+  document.getElementById('navAuthLinks').innerHTML = '<span class="nav-user-email">' + session.user.email + '</span> &nbsp;<button onclick="signOut()" class="nav-signout">Sign Out</button>';
 
   // Fetch subscription tier
   try {
@@ -399,7 +429,7 @@ async function signOut() {
   if (sb) {
     await sb.auth.signOut();
   }
-  window.location.href = '/login.html';
+  window.location.href = '/login';
 }
 
 // ===== CONSENT BANNER =====
@@ -561,7 +591,7 @@ function getMotionBadge(mt) {
 }
 function confClass(c) { return c >= 65 ? 'conf-high' : c >= 40 ? 'conf-med' : 'conf-low'; }
 function renderList(items, cls) {
-  if (!items || !items.length) return '<p style="color:var(--gray);font-size:.85rem">None identified</p>';
+  if (!items || !items.length) return '<p class="none-text">None identified</p>';
   return `<ul class="result-list ${cls || ''}">${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>`;
 }
 function makeSection(id, title, bodyHtml, openByDefault) {
@@ -665,7 +695,7 @@ function renderResults(r) {
         }
       }
       if (v.confidence_note) {
-        citNote = `<div style="font-size:.75rem;color:var(--red);margin-top:.35rem;font-style:italic">${esc(v.confidence_note)}${v.original_confidence ? ' (original: ' + v.original_confidence + '%)' : ''}</div>`;
+        citNote = `<div class="cit-note">${esc(v.confidence_note)}${v.original_confidence ? ' (original: ' + v.original_confidence + '%)' : ''}</div>`;
       }
       // Clickable law link
       let lawHtml = '';
@@ -673,13 +703,13 @@ function renderResults(r) {
         const citLinks = r.citation_verification?.citation_links || {};
         const linkMatch = Object.keys(citLinks).find(k => v.applicable_law.toLowerCase().includes(k.toLowerCase().slice(0, 15)));
         if (linkMatch && citLinks[linkMatch]?.url) {
-          lawHtml = `<div class="vector-law"><a href="${esc(citLinks[linkMatch].url)}" target="_blank" rel="noopener" style="color:var(--gold-dark);text-decoration:underline">${esc(v.applicable_law)}</a></div>`;
+          lawHtml = `<div class="vector-law"><a href="${esc(citLinks[linkMatch].url)}" target="_blank" rel="noopener" class="cit-link">${esc(v.applicable_law)}</a></div>`;
         } else {
           lawHtml = `<div class="vector-law">${esc(v.applicable_law)}</div>`;
         }
       }
       // Flag citation button (Enhancement 5)
-      const flagBtn = v.applicable_law ? `<button class="export-btn" style="font-size:.7rem;padding:.25rem .5rem;margin-top:.5rem" onclick="flagCitation('${esc(v.applicable_law).replace(/'/g, "\\'")}', '${esc(v.title).replace(/'/g, "\\'")}')">🚩 Flag Citation</button>` : '';
+      const flagBtn = v.applicable_law ? `<button class="export-btn" class="flag-btn" onclick="flagCitation('${esc(v.applicable_law).replace(/'/g, "\\'")}', '${esc(v.title).replace(/'/g, "\\'")}')">🚩 Flag Citation</button>` : '';
 
       return `<div class="vector-card"><div class="vector-top"><div><span class="vector-category ${getCatClass(v.category)}">${esc(v.category) || 'GENERAL'}</span>${getTierBadge(v.legal_tier)}${getMotionBadge(v.motion_type)}</div><span class="vector-confidence ${confClass(v.confidence)}">Confidence: ${parseInt(v.confidence) || 0}%</span></div><div class="vector-title">${esc(v.title)}${citBadge}</div>${lawHtml}<div class="vector-text">${esc(v.argument)}</div>${citNote}${prereqHtml}${flagBtn}</div>`;
     }).join('');
@@ -690,32 +720,32 @@ function renderResults(r) {
   if (r.citation_verification) {
     const cv = r.citation_verification;
     let cvHtml = '<div class="verification-summary">';
-    cvHtml += '<div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem">Citation Verification Report</div>';
+    cvHtml += '<div class="cv-label">Citation Verification Report</div>';
     if (cv.verification_rate !== null) {
       const rateColor = cv.verification_rate >= 80 ? 'var(--green)' : cv.verification_rate >= 50 ? 'var(--gold)' : 'var(--red)';
       cvHtml += `<div>Verification Rate: <span class="rate" style="color:${rateColor}">${cv.verification_rate}%</span> — ${cv.total_verified} verified, ${cv.total_not_found} not found</div>`;
     }
     if (cv.statute_source) {
-      cvHtml += `<div style="margin-top:.5rem;color:var(--green);font-size:.82rem">📜 ${esc(cv.statute_source)}</div>`;
+      cvHtml += `<div class="cv-line cv-green">📜 ${esc(cv.statute_source)}</div>`;
     }
     if (cv.verified_citations?.length) {
-      cvHtml += '<div style="margin-top:.5rem;font-size:.82rem"><span style="color:var(--green)">✓ Verified:</span> ';
+      cvHtml += '<div class="cv-line"><span style="color:var(--green)">✓ Verified:</span> ';
       cvHtml += cv.verified_citations.map(c => {
         const link = cv.citation_links?.[c];
-        return link?.url ? `<a href="${esc(link.url)}" target="_blank" rel="noopener" style="color:var(--green);text-decoration:underline">${esc(c)}</a>` : esc(c);
+        return link?.url ? `<a href="${esc(link.url)}" target="_blank" rel="noopener" class="cv-verified-link">${esc(c)}</a>` : esc(c);
       }).join(', ');
       cvHtml += '</div>';
     }
     if (cv.not_found_citations?.length) {
-      cvHtml += '<div style="margin-top:.35rem;color:var(--red);font-size:.82rem">⚠ Not Found: ' + cv.not_found_citations.map(c => esc(c)).join(', ') + '</div>';
+      cvHtml += '<div class="cv-line-red">⚠ Not Found: ' + cv.not_found_citations.map(c => esc(c)).join(', ') + '</div>';
     }
     if (cv.blocked_citations?.length) {
-      cvHtml += '<div style="margin-top:.35rem;color:var(--red);font-size:.82rem">🚫 Known Hallucinations (flagged ' + cv.blocked_citations.length + ' times): ' + cv.blocked_citations.map(c => esc(c)).join(', ') + '</div>';
+      cvHtml += '<div class="cv-line-red">🚫 Known Hallucinations (flagged ' + cv.blocked_citations.length + ' times): ' + cv.blocked_citations.map(c => esc(c)).join(', ') + '</div>';
     }
     if (cv.dual_model_check?.length) {
       const suspect = cv.dual_model_check.filter(c => !c.real);
       if (suspect.length > 0) {
-        cvHtml += '<div style="margin-top:.35rem;color:var(--red);font-size:.82rem">🔄 Dual-Model Flagged: ' + suspect.map(c => esc(c.citation)).join(', ') + '</div>';
+        cvHtml += '<div class="cv-line-red">🔄 Dual-Model Flagged: ' + suspect.map(c => esc(c.citation)).join(', ') + '</div>';
       }
     }
     if (cv.warning) {
@@ -757,7 +787,7 @@ function renderResults(r) {
     // Add upgrade prompt above results
     var promoDiv = document.createElement('div');
     promoDiv.className = 'paywall-count';
-    promoDiv.innerHTML = '⚡ Inveritas found <strong>' + vectorCount + ' defense vectors</strong>' + (conflictCount > 0 ? ' and <strong>' + conflictCount + ' tier conflicts</strong>' : '') + ' for your case. <a href="/#pricing" style="color:var(--gold);font-weight:700">Unlock the full analysis →</a>';
+    promoDiv.innerHTML = '⚡ Inveritas found <strong>' + vectorCount + ' defense vectors</strong>' + (conflictCount > 0 ? ' and <strong>' + conflictCount + ' tier conflicts</strong>' : '') + ' for your case. <a href="/#pricing" class="promo-link">Unlock the full analysis →</a>';
     wrap.querySelector('.results-wrap').insertBefore(promoDiv, wrap.querySelector('.results-wrap').children[2]);
   }
 
@@ -823,5 +853,16 @@ async function flagCitation(citation, vectorTitle) {
   }
 }
 </script>
+<div class="footer-crosslinks" style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(212,168,67,.05)">
+  <nav aria-label="Site navigation">
+    <a href="/">Home</a> · 
+    <a href="/analyze">Analysis Engine</a> · 
+    <a href="/blog">The Inversion Brief</a> · 
+    <a href="/login">Sign In</a> · 
+    <a href="/privacy">Privacy</a> · 
+    <a href="/terms">Terms</a> · 
+    <a href="/cookies">Cookies</a>
+  </nav>
+</div>
 </body>
 </html>

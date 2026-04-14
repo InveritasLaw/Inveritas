@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inveritas — Admin</title>
+<title>Admin Panel — Inveritas Platform Administration</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -137,6 +137,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:r
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","G-031BN237WH");</script>
 <!-- Search Atlas Dynamic Optimization -->
 <script nowprocket nitro-exclude type="text/javascript" id="sa-dynamic-optimization" data-uuid="a19b2a38-5f3e-47d9-ba45-14fbb8e93ca9" src="data:text/javascript;base64,dmFyIHNjcmlwdCA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoInNjcmlwdCIpO3NjcmlwdC5zZXRBdHRyaWJ1dGUoIm5vd3Byb2NrZXQiLCAiIik7c2NyaXB0LnNldEF0dHJpYnV0ZSgibml0cm8tZXhjbHVkZSIsICIiKTtzY3JpcHQuc3JjID0gImh0dHBzOi8vZGFzaGJvYXJkLnNlYXJjaGF0bGFzLmNvbS9zY3JpcHRzL2R5bmFtaWNfb3B0aW1pemF0aW9uLmpzIjtzY3JpcHQuZGF0YXNldC51dWlkID0gImExOWIyYTM4LTVmM2UtNDdkOS1iYTQ1LTE0ZmJiOGU5M2NhOSI7c2NyaXB0LmlkID0gInNhLWR5bmFtaWMtb3B0aW1pemF0aW9uLWxvYWRlciI7ZG9jdW1lbnQuaGVhZC5hcHBlbmRDaGlsZChzY3JpcHQpOw=="></script>
+<link rel="canonical" href="https://inveritaslaw.com/admin">
+<meta name="description" content="Inveritas administrative dashboard for platform management and analytics.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://inveritaslaw.com/admin">
+<meta property="og:title" content="Admin Panel — Inveritas Platform Administration">
+<meta property="og:description" content="Inveritas administrative dashboard for platform management and analytics.">
+<meta property="og:image" content="https://inveritaslaw.com/assets/inveritas-logo-dark.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@inveritaslaw">
+<meta name="twitter:title" content="Admin Panel — Inveritas Platform Administration">
+<meta name="twitter:description" content="Inveritas administrative dashboard for platform management and analytics.">
+<meta name="twitter:image" content="https://inveritaslaw.com/assets/inveritas-logo-dark.png">
+<meta name="keywords" content="legal defense AI, statutory inversion, criminal defense, defense vectors, legal tech, Inveritas">
 </head>
 <body>
 
@@ -148,9 +161,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:r
       <span class="admin-badge">ADMIN</span>
     </a>
     <ul class="nav-links">
-      <li><a href="/dashboard.html">Dashboard</a></li>
-      <li><a href="/analyze.html">Analysis</a></li>
-      <li><a href="/blog.html">Blog</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/analyze">Analysis</a></li>
+      <li><a href="/blog">Blog</a></li>
       <li><button onclick="doLogout()">Sign Out</button></li>
     </ul>
   </div>
@@ -517,7 +530,7 @@ async function loadAuditLog(){
   }catch(err){document.getElementById('auditList').innerHTML='<p style="color:var(--red)">'+esc(err.message)+'</p>'}
 }
 
-async function doLogout(){await sb.auth.signOut();window.location.href='/login.html'}
+async function doLogout(){await sb.auth.signOut();window.location.href='/login'}
 </script>
 </body>
 </html>

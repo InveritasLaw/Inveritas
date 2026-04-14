@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inveritas — Sign In</title>
+<title>Sign In to Inveritas — AI Legal Defense Analysis Platform</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,12 +57,34 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 .password-reset-link{display:block;text-align:right;font-size:.78rem;color:var(--gold);text-decoration:none;margin-top:.25rem}
 .password-reset-link:hover{text-decoration:underline}
+
+.student-banner{background:rgba(93,232,160,.06);border:1px solid rgba(93,232,160,.2);border-radius:3px;padding:1rem;margin-bottom:1.25rem;font-size:.82rem;color:var(--green);line-height:1.6}
+.file-input-sm{padding:.5rem}
+.file-hint{font-size:.72rem;color:var(--gray);margin-top:.25rem}
+.btn-student-submit{background:var(--green);color:var(--navy-deep)}
+.footer-crosslinks{font-size:.75rem}.footer-crosslinks a{color:var(--gray);text-decoration:none;transition:color .3s}.footer-crosslinks a:hover{color:var(--gold)}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-031BN237WH"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","G-031BN237WH");</script>
 <!-- Search Atlas Dynamic Optimization -->
 <script nowprocket nitro-exclude type="text/javascript" id="sa-dynamic-optimization" data-uuid="a19b2a38-5f3e-47d9-ba45-14fbb8e93ca9" src="data:text/javascript;base64,dmFyIHNjcmlwdCA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoInNjcmlwdCIpO3NjcmlwdC5zZXRBdHRyaWJ1dGUoIm5vd3Byb2NrZXQiLCAiIik7c2NyaXB0LnNldEF0dHJpYnV0ZSgibml0cm8tZXhjbHVkZSIsICIiKTtzY3JpcHQuc3JjID0gImh0dHBzOi8vZGFzaGJvYXJkLnNlYXJjaGF0bGFzLmNvbS9zY3JpcHRzL2R5bmFtaWNfb3B0aW1pemF0aW9uLmpzIjtzY3JpcHQuZGF0YXNldC51dWlkID0gImExOWIyYTM4LTVmM2UtNDdkOS1iYTQ1LTE0ZmJiOGU5M2NhOSI7c2NyaXB0LmlkID0gInNhLWR5bmFtaWMtb3B0aW1pemF0aW9uLWxvYWRlciI7ZG9jdW1lbnQuaGVhZC5hcHBlbmRDaGlsZChzY3JpcHQpOw=="></script>
+<link rel="canonical" href="https://inveritaslaw.com/login">
+<meta name="description" content="Sign in or create your Inveritas account. Access AI-powered statutory inversion analysis for criminal defense across all 50 states.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://inveritaslaw.com/login">
+<meta property="og:title" content="Sign In to Inveritas — AI Legal Defense Analysis Platform">
+<meta property="og:description" content="Sign in or create your Inveritas account. Access AI-powered statutory inversion analysis for criminal defense across all 50 states.">
+<meta property="og:image" content="https://inveritaslaw.com/assets/inveritas-logo-dark.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@inveritaslaw">
+<meta name="twitter:title" content="Sign In to Inveritas — AI Legal Defense Analysis Platform">
+<meta name="twitter:description" content="Sign in or create your Inveritas account. Access AI-powered statutory inversion analysis for criminal defense across all 50 states.">
+<meta name="twitter:image" content="https://inveritaslaw.com/assets/inveritas-logo-dark.png">
+<meta name="keywords" content="legal defense AI, statutory inversion, criminal defense, defense vectors, legal tech, Inveritas">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Sign In to Inveritas","url":"https://inveritaslaw.com/login","description":"Sign in or create an account for AI-powered statutory inversion analysis.","publisher":{"@type":"Organization","name":"Inveritas","url":"https://inveritaslaw.com"}}
+</script>
 </head>
 <body>
 <div class="auth-container">
@@ -112,14 +134,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
       <div class="tos-check">
         <input type="checkbox" id="tosAccept">
-        <label for="tosAccept">I have read and agree to the <a href="/terms.html" target="_blank">Terms of Service</a>, <a href="/privacy.html" target="_blank">Privacy Policy</a>, and <a href="/cookies.html" target="_blank">Cookie Policy</a>. I consent to the collection and use of my data as described therein.</label>
+        <label for="tosAccept">I have read and agree to the <a href="/terms" target="_blank">Terms of Service</a>, <a href="/privacy" target="_blank">Privacy Policy</a>, and <a href="/cookies" target="_blank">Cookie Policy</a>. I consent to the collection and use of my data as described therein.</label>
       </div>
       <button class="btn btn-gold" id="signupBtn" onclick="doSignup()">Create Account</button>
     </div>
 
     <!-- STUDENT PANEL -->
     <div id="studentPanel" class="auth-panel">
-      <div style="background:rgba(93,232,160,.06);border:1px solid rgba(93,232,160,.2);border-radius:3px;padding:1rem;margin-bottom:1.25rem;font-size:.82rem;color:var(--green);line-height:1.6">
+      <div class="student-banner">
         <strong>Free access for law students.</strong> Sign up with your .edu email and upload a current university document (student ID, enrollment letter, or transcript) to verify your status.
       </div>
       <div class="form-group">
@@ -136,8 +158,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
       <div class="form-group">
         <label class="form-label">University Document</label>
-        <input type="file" class="form-input" id="studentDoc" accept=".pdf,.jpg,.jpeg,.png" style="padding:.5rem">
-        <div style="font-size:.72rem;color:var(--gray);margin-top:.25rem">Student ID, enrollment verification, or current transcript (PDF, JPG, PNG — max 5MB)</div>
+        <input type="file" class="form-input" id="studentDoc" accept=".pdf,.jpg,.jpeg,.png" class="file-input-sm">
+        <div class="file-hint">Student ID, enrollment verification, or current transcript (PDF, JPG, PNG — max 5MB)</div>
       </div>
       <div class="form-group">
         <label class="form-label">Law School Name</label>
@@ -145,9 +167,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
       <div class="tos-check">
         <input type="checkbox" id="studentTos">
-        <label for="studentTos">I have read and agree to the <a href="/terms.html" target="_blank">Terms of Service</a>, <a href="/privacy.html" target="_blank">Privacy Policy</a>, and <a href="/cookies.html" target="_blank">Cookie Policy</a>. I certify that I am a currently enrolled law student.</label>
+        <label for="studentTos">I have read and agree to the <a href="/terms" target="_blank">Terms of Service</a>, <a href="/privacy" target="_blank">Privacy Policy</a>, and <a href="/cookies" target="_blank">Cookie Policy</a>. I certify that I am a currently enrolled law student.</label>
       </div>
-      <button class="btn btn-gold" id="studentBtn" onclick="doStudentSignup()" style="background:var(--green);color:var(--navy-deep)">Create Student Account</button>
+      <button class="btn btn-gold" id="studentBtn" onclick="doStudentSignup()" class="btn-student-submit">Create Student Account</button>
     </div>
   </div>
 
@@ -168,7 +190,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
-    window.location.href = '/dashboard.html';
+    window.location.href = '/dashboard';
   }
   // Auto-switch to student tab if ?student=true
   var params = new URLSearchParams(window.location.search);
@@ -218,7 +240,7 @@ async function doLogin() {
     // Log the login event
     await logEvent('login', { email });
     
-    window.location.href = '/dashboard.html';
+    window.location.href = '/dashboard';
   } catch (err) {
     showMsg(err.message || 'Login failed.', 'error');
     btn.disabled = false; btn.textContent = 'Sign In';
@@ -262,7 +284,7 @@ async function doSignup() {
 
     if (data.session) {
       // Auto-confirmed — redirect to analysis
-      window.location.href = '/dashboard.html';
+      window.location.href = '/dashboard';
     } else {
       // Email confirmation required
       showMsg('Account created! Check your email to confirm, then sign in.', 'success');
@@ -281,7 +303,7 @@ async function resetPassword(e) {
   
   try {
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/login.html'
+      redirectTo: window.location.origin + '/login'
     });
     if (error) throw error;
     showMsg('Password reset link sent to ' + email, 'success');
@@ -361,7 +383,7 @@ async function doStudentSignup() {
     }
 
     if (data.session) {
-      window.location.href = '/dashboard.html';
+      window.location.href = '/dashboard';
     } else {
       showMsg('Student account created! Check your .edu email to confirm, then sign in. Your student status will be verified within 24 hours.', 'success');
       btn.disabled = false; btn.textContent = 'Create Student Account';
@@ -377,5 +399,16 @@ document.getElementById('loginPassword').addEventListener('keypress', e => { if 
 document.getElementById('signupConfirm').addEventListener('keypress', e => { if (e.key === 'Enter') doSignup(); });
 document.getElementById('studentConfirm').addEventListener('keypress', e => { if (e.key === 'Enter') doStudentSignup(); });
 </script>
+<div class="footer-crosslinks" style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(212,168,67,.05)">
+  <nav aria-label="Site navigation">
+    <a href="/">Home</a> · 
+    <a href="/analyze">Analysis Engine</a> · 
+    <a href="/blog">The Inversion Brief</a> · 
+    <a href="/login">Sign In</a> · 
+    <a href="/privacy">Privacy</a> · 
+    <a href="/terms">Terms</a> · 
+    <a href="/cookies">Cookies</a>
+  </nav>
+</div>
 </body>
 </html>

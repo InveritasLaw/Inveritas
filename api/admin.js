@@ -55,7 +55,7 @@ module.exports = async function handler(req, res) {
       var to = from + perPage - 1;
 
       var q = sb.from('user_profiles')
-        .select('*, cases:cases(count)', { count: 'exact' })
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(from, to);
 

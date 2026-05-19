@@ -810,6 +810,8 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
     }
 
     // ===== LOG ANALYSIS TO SUPABASE =====
+    // Persists the FULL analysis (situation + result JSONB) so users can re-read past
+    // analyses from /api/history and so we have a complete audit trail for legal/liability purposes.
     if (userId && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
       try {
         const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -817,19 +819,31 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
         // Increment usage counter
         await supabaseAdmin.rpc('increment_analysis_count', { p_user_id: userId });
 
-        // Log the analysis
+        // Parse the (possibly verification-enriched) result ONCE so we can both
+        // save it AND extract the vector count metric.
+        let parsedResult = null;
+        let vectorCount = 0;
+        if (data.content && data.content[0] && data.content[0].text) {
+          try {
+            parsedResult = JSON.parse(
+              data.content[0].text.replace(/```json|```/g, '').trim()
+            );
+            vectorCount = (parsedResult.inversion_vectors || []).length;
+          } catch (parseErr) {
+            console.error('Result parse for persistence failed (non-blocking):', parseErr.message);
+          }
+        }
+
+        // Log the analysis — full content + metadata for user history and legal audit trail
         await supabaseAdmin.from('analysis_history').insert({
           user_id: userId,
           state: safeState,
           county: safeCounty,
           charge: safeCharge,
+          situation: safeSituation,
           situation_length: safeSituation.length,
-          vectors_found: data.content?.[0]?.text ? (() => {
-            try {
-              const parsed = JSON.parse(data.content[0].text.replace(/```json|```/g, '').trim());
-              return (parsed.inversion_vectors || []).length;
-            } catch { return 0; }
-          })() : 0,
+          result: parsedResult,
+          vectors_found: vectorCount,
           ip_address: ip,
           created_at: new Date().toISOString()
         });

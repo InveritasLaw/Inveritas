@@ -254,6 +254,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:r
       <!-- Tabs -->
       <div class="tabs">
         <div class="tab active" onclick="switchTab('cases')">My Cases</div>
+        <div class="tab" onclick="switchTab('history')">Analysis History</div>
         <div class="tab" onclick="switchTab('subscription')">Subscription</div>
         <div class="tab" onclick="switchTab('account')">Account</div>
       </div>
@@ -261,6 +262,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:r
       <!-- Cases Tab -->
       <div class="tab-panel active" id="panel-cases">
         <div id="casesList"><div class="spinner"></div></div>
+      </div>
+
+      <!-- Analysis History Tab (standalone quick analyses) -->
+      <div class="tab-panel" id="panel-history">
+        <div id="historyList"><div class="spinner"></div></div>
       </div>
 
       <!-- Subscription Tab -->
@@ -293,6 +299,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 0;background:r
         <button class="btn btn-outline btn-sm" onclick="backToCases()">← Back to Cases</button>
       </div>
       <div id="caseDetailContent"></div>
+    </div>
+
+    <!-- Analysis History Detail View -->
+    <div id="historyDetail" style="display:none">
+      <div style="margin-bottom:1.5rem">
+        <button class="btn btn-outline btn-sm" onclick="backToHistory()">← Back to History</button>
+      </div>
+      <div id="historyDetailContent"></div>
     </div>
   </div>
 </div>
@@ -441,6 +455,8 @@ var currentSession = null;
 var currentCaseId = null;
 var currentAnalyses = [];
 var casesData = [];
+var historyData = [];
+var historyLoaded = false;
 
 // Auth check
 (async function() {
@@ -486,6 +502,7 @@ function switchTab(name) {
   document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
   document.querySelector('.tab-panel#panel-' + name).classList.add('active');
   event.target.classList.add('active');
+  if (name === 'history' && !historyLoaded) loadHistory();
 }
 
 // ===== CASES =====
@@ -646,6 +663,89 @@ function renderCaseDetail(data) {
 function backToCases() {
   currentCaseId = null;
   document.getElementById('caseDetail').style.display = 'none';
+  document.getElementById('dashContent').style.display = 'block';
+}
+
+// ===== ANALYSIS HISTORY (standalone quick analyses) =====
+async function loadHistory() {
+  var el = document.getElementById('historyList');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    var r = await fetch('/api/history', { headers: authHeaders() });
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+    historyData = data.history || [];
+    historyLoaded = true;
+    renderHistoryList(typeof data.total === 'number' ? data.total : historyData.length);
+  } catch (err) {
+    el.innerHTML = '<div class="empty-state"><p style="color:var(--red)">Failed to load history: ' + esc(err.message) + '</p></div>';
+  }
+}
+
+function renderHistoryList(total) {
+  var el = document.getElementById('historyList');
+  if (historyData.length === 0) {
+    el.innerHTML = '<div class="empty-state"><h3>No quick analyses yet</h3><p>Standalone analyses you run from the Analysis Engine are saved here so you can re-read them anytime.</p><a href="/analyze" class="btn btn-gold">Run Quick Analysis</a></div>';
+    return;
+  }
+  var html = '<p style="font-size:.8rem;color:var(--gray);margin-bottom:1rem">' + total + ' saved ' + (total === 1 ? 'analysis' : 'analyses') + ' from the Analysis Engine.</p>';
+  html += '<div class="cases-grid">';
+  historyData.forEach(function(a) {
+    var loc = [a.county, a.state].filter(Boolean).join(', ');
+    html += '<div class="case-card" onclick="viewHistoryItem(\'' + a.id + '\')">' +
+      '<div class="case-card-top"><span class="case-number">Quick Analysis</span><span style="font-size:.7rem;color:var(--gray)">' + new Date(a.created_at).toLocaleDateString() + '</span></div>' +
+      '<div class="case-title">' + esc(a.charge || 'Analysis') + '</div>' +
+      (loc ? '<div class="case-charge">' + esc(loc) + '</div>' : '') +
+      (a.situation_preview ? '<div style="font-size:.8rem;color:var(--gray-light);line-height:1.6;margin:.5rem 0">' + esc(a.situation_preview) + '</div>' : '') +
+      '<div class="case-meta">' +
+        '<span>' + (a.vectors_found || 0) + ' defense vectors</span>' +
+        '<span>' + new Date(a.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</span>' +
+      '</div></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+async function viewHistoryItem(id) {
+  document.getElementById('dashContent').style.display = 'none';
+  document.getElementById('historyDetail').style.display = 'block';
+  document.getElementById('historyDetailContent').innerHTML = '<div class="spinner"></div>';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  try {
+    var r = await fetch('/api/history?id=' + encodeURIComponent(id), { headers: authHeaders() });
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+    renderHistoryDetail(data.analysis);
+  } catch (err) {
+    document.getElementById('historyDetailContent').innerHTML = '<p style="color:var(--red)">Failed to load analysis: ' + esc(err.message) + '</p>';
+  }
+}
+
+function renderHistoryDetail(a) {
+  var res = a.result;
+  if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) { res = null; } }
+  var meta = [a.charge, a.county, a.state].filter(Boolean).join(' · ');
+
+  var html = '<div class="case-detail">' +
+    '<div class="case-number" style="margin-bottom:.25rem">Quick Analysis · ' + new Date(a.created_at).toLocaleString() + '</div>' +
+    '<h2 style="margin-bottom:.5rem">' + esc(a.charge || 'Analysis') + '</h2>' +
+    (meta ? '<div style="font-size:.85rem;color:var(--gray-light);margin-bottom:1rem">' + esc(meta) + '</div>' : '') +
+    (a.situation ? '<div><label class="form-label">Situation</label><p style="font-size:.88rem;color:var(--gray-light);line-height:1.7;white-space:pre-wrap">' + esc(a.situation) + '</p></div>' : '') +
+  '</div>';
+
+  if (res) {
+    html += '<div style="margin-top:1.5rem;padding:1.5rem;background:rgba(15,33,64,.3);border:1px solid rgba(212,168,67,.15);border-radius:4px">' +
+      renderAnalysisBody(res) +
+    '</div>';
+  } else {
+    html += '<div class="empty-state" style="padding:2rem"><p>No structured result data was saved for this analysis.</p></div>';
+  }
+
+  document.getElementById('historyDetailContent').innerHTML = html;
+}
+
+function backToHistory() {
+  document.getElementById('historyDetail').style.display = 'none';
   document.getElementById('dashContent').style.display = 'block';
 }
 
@@ -853,15 +953,27 @@ function viewAnalysis(analysisId) {
     return;
   }
 
-  var ca = res.charge_analysis || {};
-  var ja = res.jurisdiction_analysis || {};
-  var vectors = res.inversion_vectors || [];
-  var conflicts = res.tier_conflict_opportunities || [];
-
   var html = '<div style="margin-top:1.5rem;padding:1.5rem;background:rgba(15,33,64,.3);border:1px solid rgba(212,168,67,.15);border-radius:4px">';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">' +
     '<h3 style="font-family:var(--font-display);font-size:1.3rem;color:var(--gold)">Version ' + analysis.version + ' Results</h3>' +
     '<button class="btn btn-outline btn-sm" onclick="document.getElementById(\'analysisViewer\').style.display=\'none\'">Close</button></div>';
+  html += renderAnalysisBody(res);
+  html += '</div>';
+
+  document.getElementById('analysisViewer').innerHTML = html;
+  document.getElementById('analysisViewer').style.display = 'block';
+  document.getElementById('analysisViewer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Renders the structured analysis result body (charge header, conflicts,
+// three-tier analysis, elements, defense vectors, and list sections).
+// Shared by the per-case analysis viewer and the standalone history viewer.
+function renderAnalysisBody(res) {
+  var ca = res.charge_analysis || {};
+  var ja = res.jurisdiction_analysis || {};
+  var vectors = res.inversion_vectors || [];
+  var conflicts = res.tier_conflict_opportunities || [];
+  var html = '';
 
   // Charge header
   html += '<div style="padding:1rem;background:rgba(6,14,26,.5);border-radius:3px;margin-bottom:1rem">' +
@@ -967,11 +1079,7 @@ function viewAnalysis(analysisId) {
     }
   });
 
-  html += '</div>';
-
-  document.getElementById('analysisViewer').innerHTML = html;
-  document.getElementById('analysisViewer').style.display = 'block';
-  document.getElementById('analysisViewer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  return html;
 }
 
 // ===== ARCHIVE CASE =====

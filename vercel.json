@@ -7,6 +7,7 @@
     "api/analyze.js": { "maxDuration": 60 },
     "api/reanalyze.js": { "maxDuration": 60 },
     "api/cases.js": { "maxDuration": 10 },
+    "api/history.js": { "maxDuration": 10 },
     "api/evidence.js": { "maxDuration": 30 },
     "api/admin.js": { "maxDuration": 15 },
     "api/blog.js": { "maxDuration": 10 },

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facing Criminal Charges? Find the Cracks in the State's Case | Inveritas</title>
+<meta name="description" content="The prosecution is already building the case to convict you. Inveritas inverts the statutes — federal, state, and municipal — to surface the defense vectors hiding in their own law. Full analysis in ~90 seconds.">
+<meta name="keywords" content="criminal defense, facing charges, defense analysis, statutory inversion, pretrial motions, defense vectors">
+<meta property="og:title" content="The State is building the case to convict you. What do you have?">
+<meta property="og:description" content="Inveritas turns the prosecution's own statutes into your defense. Surface defense vectors, tier conflicts, and the deadlines you can't afford to miss.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://inveritaslaw.com/defense">
+<link rel="canonical" href="https://inveritaslaw.com/defense">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-031BN237WH"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","G-031BN237WH");</script>
+
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --navy-deep: #060E1A;
+  --navy: #0A1628;
+  --navy-mid: #0F2140;
+  --gold: #D4A843;
+  --gold-light: #E8C76A;
+  --gold-dark: #B8912E;
+  --white: #F2F0ED;
+  --white-pure: #FFFFFF;
+  --gray: #8A99AB;
+  --gray-light: #C5CDD8;
+  --red: #E85D5D;
+  --red-deep: #C44;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, sans-serif;
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--navy-deep);
+  color: var(--white);
+  font-family: var(--font-body);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 1.5rem; }
+section { position: relative; z-index: 2; }
+em { font-style: italic; color: var(--gold); }
+
+/* ===== Sticky header ===== */
+.bar {
+  position: sticky; top: 0; z-index: 1000;
+  background: rgba(6,14,26,0.82); backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(212,168,67,0.1);
+}
+.bar-inner { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.5rem; max-width: 1080px; margin: 0 auto; }
+.brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+.brand .mark { width: 28px; height: 28px; border: 1.5px solid var(--gold); border-radius: 2px; display: grid; place-items: center; color: var(--gold); font-family: var(--font-display); font-weight: 700; font-size: 1rem; }
+.brand .word { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; letter-spacing: 0.14em; color: var(--white-pure); }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 1rem 2rem; font-family: var(--font-body); font-size: 0.95rem; font-weight: 700;
+  letter-spacing: 0.02em; text-decoration: none; border-radius: 3px; cursor: pointer;
+  border: 1px solid transparent; transition: transform 0.15s ease, box-shadow 0.25s ease, background 0.25s ease;
+  text-align: center;
+}
+.btn-gold { background: var(--gold); color: var(--navy-deep); box-shadow: 0 6px 28px rgba(212,168,67,0.25); }
+.btn-gold:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 10px 38px rgba(212,168,67,0.38); }
+.btn-sm { padding: 0.6rem 1.15rem; font-size: 0.82rem; }
+.btn-lg { padding: 1.15rem 2.6rem; font-size: 1.05rem; }
+.bar .btn { box-shadow: none; }
+
+/* ===== Hero ===== */
+.hero { padding: 5.5rem 0 4rem; text-align: center; position: relative; }
+.hero::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(212,168,67,0.08), transparent 70%);
+  pointer-events: none;
+}
+.eyebrow {
+  display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--red); border: 1px solid rgba(232,93,93,0.35); border-radius: 100px; padding: 0.4rem 1rem; margin-bottom: 1.8rem;
+}
+h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(2.4rem, 5.6vw, 4.4rem); line-height: 1.04; letter-spacing: -0.01em; max-width: 16ch; margin: 0 auto 1.5rem; }
+.lede { color: var(--gray-light); font-size: clamp(1.05rem, 2.2vw, 1.3rem); max-width: 60ch; margin: 0 auto 2.4rem; }
+.cta-stack { display: flex; flex-direction: column; align-items: center; gap: 0.85rem; }
+.cta-sub { font-size: 0.85rem; color: var(--gray); }
+.cta-sub strong { color: var(--gold-light); font-weight: 600; }
+.assurance { margin-top: 2.6rem; font-size: 0.78rem; letter-spacing: 0.04em; color: var(--gray); }
+
+/* ===== Section scaffolding ===== */
+.s { padding: 4.5rem 0; }
+.s-tight { padding: 3rem 0; }
+.kicker { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; text-align: center; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.9rem, 4vw, 3rem); line-height: 1.1; text-align: center; max-width: 20ch; margin: 0 auto 1rem; }
+.sub { color: var(--gray-light); text-align: center; max-width: 58ch; margin: 0 auto 2.6rem; font-size: 1.05rem; }
+
+/* ===== Stakes grid (cost of conviction) ===== */
+.stakes { background: linear-gradient(180deg, rgba(232,93,93,0.05), transparent 60%); border-top: 1px solid rgba(232,93,93,0.12); border-bottom: 1px solid rgba(232,93,93,0.12); }
+.stakes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.stake { background: rgba(10,22,40,0.6); border: 1px solid rgba(232,93,93,0.14); border-radius: 6px; padding: 1.5rem; }
+.stake h3 { font-family: var(--font-display); font-size: 1.35rem; font-weight: 600; color: var(--white-pure); margin-bottom: 0.4rem; }
+.stake p { font-size: 0.9rem; color: var(--gray); line-height: 1.6; }
+
+/* ===== Clock / urgency ===== */
+.clock { text-align: center; }
+.clock-line { max-width: 56ch; margin: 0 auto 1.4rem; font-size: 1.15rem; color: var(--gray-light); }
+.clock-quote { font-family: var(--font-display); font-style: italic; font-size: clamp(1.5rem, 3.4vw, 2.2rem); color: var(--gold-light); max-width: 22ch; margin: 1.4rem auto 0; line-height: 1.25; }
+
+/* ===== Steps ===== */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.step { padding: 1.5rem; }
+.step .n { font-family: var(--font-display); font-size: 2.6rem; font-weight: 700; color: var(--gold); line-height: 1; opacity: 0.5; }
+.step h3 { font-family: var(--font-display); font-size: 1.4rem; font-weight: 600; color: var(--white-pure); margin: 0.6rem 0 0.4rem; }
+.step p { font-size: 0.92rem; color: var(--gray); }
+
+/* ===== Deliverables list ===== */
+.deliver { max-width: 720px; margin: 0 auto; }
+.deliver-item { display: flex; gap: 1rem; align-items: flex-start; padding: 1.1rem 0; border-bottom: 1px solid rgba(212,168,67,0.08); }
+.deliver-item:last-child { border-bottom: none; }
+.deliver-item .tick { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--gold-muted, rgba(212,168,67,0.15)); color: var(--gold); display: grid; place-items: center; font-weight: 700; font-size: 0.9rem; border: 1px solid rgba(212,168,67,0.35); }
+.deliver-item h4 { font-size: 1rem; font-weight: 600; color: var(--white-pure); margin-bottom: 0.15rem; }
+.deliver-item p { font-size: 0.88rem; color: var(--gray); }
+
+/* ===== Objections ===== */
+.obj-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; max-width: 880px; margin: 0 auto; }
+.obj { background: rgba(15,33,64,0.4); border: 1px solid rgba(212,168,67,0.12); border-radius: 6px; padding: 1.6rem; }
+.obj .q { font-family: var(--font-display); font-style: italic; font-size: 1.25rem; color: var(--white-pure); margin-bottom: 0.6rem; }
+.obj .a { font-size: 0.92rem; color: var(--gray-light); }
+
+/* ===== Price ===== */
+.price-card { max-width: 540px; margin: 0 auto; text-align: center; background: linear-gradient(160deg, rgba(212,168,67,0.1), rgba(212,168,67,0.02)); border: 1px solid rgba(212,168,67,0.3); border-radius: 10px; padding: 3rem 2rem; }
+.price-num { font-family: var(--font-display); font-size: 4rem; font-weight: 700; color: var(--gold); line-height: 1; }
+.price-num span { font-size: 1.4rem; color: var(--gray-light); }
+.price-label { font-size: 0.95rem; color: var(--gray-light); margin: 0.4rem 0 1.6rem; }
+.price-anchor { font-size: 0.9rem; color: var(--gray); margin-top: 1.4rem; }
+
+/* ===== Final CTA ===== */
+.final { text-align: center; background: radial-gradient(ellipse 60% 80% at 50% 100%, rgba(212,168,67,0.1), transparent 70%); }
+.final h2 { margin-bottom: 1.8rem; }
+
+/* ===== Footer ===== */
+footer { border-top: 1px solid rgba(212,168,67,0.08); padding: 2.5rem 0; text-align: center; }
+.disclaimer { font-size: 0.74rem; color: var(--gray); max-width: 70ch; margin: 0 auto 1rem; line-height: 1.7; }
+.foot-links { font-size: 0.78rem; color: var(--gray); display: flex; gap: 1.25rem; justify-content: center; flex-wrap: wrap; }
+.foot-links a { color: var(--gray); text-decoration: none; }
+.foot-links a:hover { color: var(--gold); }
+
+@media (max-width: 760px) {
+  .stakes-grid, .steps { grid-template-columns: 1fr; }
+  .obj-grid { grid-template-columns: 1fr; }
+  .bar .word { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<header class="bar">
+  <div class="bar-inner">
+    <a class="brand" href="/">
+      <span class="mark">I</span>
+      <span class="word">INVERITAS</span>
+    </a>
+    <a class="btn btn-gold btn-sm" href="/analyze" onclick="track('header')">Start Analysis →</a>
+  </div>
+</header>
+
+<!-- ===== Hero ===== -->
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">If you've been charged, read this now</span>
+    <h1>The State has a team building the case to convict you.</h1>
+    <p class="lede">
+      Prosecutors, police reports, and lab results are stacking against you right now.
+      Inveritas reads the actual statutes — federal, state, and municipal — and turns
+      their <em>own law</em> into your defense.
+    </p>
+    <div class="cta-stack">
+      <a class="btn btn-gold btn-lg" href="/analyze" onclick="track('hero')">Expose My Defense Vectors →</a>
+      <div class="cta-sub">Full analysis in <strong>~90 seconds</strong> · From <strong>$29</strong> · No attorney required to start</div>
+    </div>
+    <div class="assurance">Built on the literal text of the law — not opinions, not hope.</div>
+  </div>
+</section>
+
+<!-- ===== Stakes: cost of a conviction ===== -->
+<section class="s stakes">
+  <div class="wrap">
+    <div class="kicker">What's actually at risk</div>
+    <h2>A conviction doesn't end when you leave the courtroom.</h2>
+    <p class="sub">It follows you. Every background check, every application, every form that asks
+      "have you ever been convicted." Here's what's on the table:</p>
+    <div class="stakes-grid">
+      <div class="stake"><h3>Your freedom</h3><p>Jail, probation, supervision, and conditions that control your daily life.</p></div>
+      <div class="stake"><h3>Your livelihood</h3><p>Lost jobs, denied licenses, and a record that surfaces in every hiring decision.</p></div>
+      <div class="stake"><h3>Your family</h3><p>Custody fights, housing denials, and the people depending on you paying the price.</p></div>
+      <div class="stake"><h3>Your rights</h3><p>Firearm rights, voting in some states, and immigration status — gone or in jeopardy.</p></div>
+      <div class="stake"><h3>Your reputation</h3><p>Public records don't forget. One charge can define how the world sees you.</p></div>
+      <div class="stake"><h3>Your future</h3><p>It doesn't come off. The decisions made in the next few weeks last decades.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Urgency / the clock ===== -->
+<section class="s clock">
+  <div class="wrap">
+    <div class="kicker">The clock is already running</div>
+    <h2>Every day you wait, your defense gets weaker.</h2>
+    <p class="clock-line">Body-cam footage gets overwritten. Witnesses' memories fade. And the
+      deadlines to file the motions that could break the State's case pass quietly — once they're
+      gone, that defense is gone with them.</p>
+    <p class="clock-quote">"The defense you don't raise in time is a defense you've waived."</p>
+  </div>
+</section>
+
+<!-- ===== Problem / agitation ===== -->
+<section class="s" style="background:rgba(10,22,40,0.4)">
+  <div class="wrap">
+    <div class="kicker">Why most defendants lose before trial</div>
+    <h2>The cracks in the State's case are hiding in the statutes.</h2>
+    <p class="sub">The vast majority of cases end in a plea — often because no one ever found the
+      weaknesses. Jurisdictional tier conflicts. Elements the prosecution can't actually prove.
+      Procedural defects. They're written into the law itself. You just need a way to see them.</p>
+  </div>
+</section>
+
+<!-- ===== How it works ===== -->
+<section class="s">
+  <div class="wrap">
+    <div class="kicker">How Inveritas works</div>
+    <h2>Turn the law back on itself in three steps.</h2>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3>Tell us what happened</h3><p>Describe the stop, the arrest, the charge, and the facts — in plain language.</p></div>
+      <div class="step"><div class="n">2</div><h3>We invert the statutes</h3><p>The engine analyzes the governing law across federal, state, and municipal tiers.</p></div>
+      <div class="step"><div class="n">3</div><h3>You get your leverage</h3><p>Defense vectors, tier conflicts, required elements, motions, and deadlines.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Deliverables ===== -->
+<section class="s" style="background:rgba(10,22,40,0.4)">
+  <div class="wrap">
+    <div class="kicker">What you walk away with</div>
+    <h2>Not a summary. A defense map.</h2>
+    <div class="deliver" style="margin-top:1rem">
+      <div class="deliver-item"><span class="tick">✓</span><div><h4>Defense inversion vectors</h4><p>Concrete angles to attack the charge, each with a confidence assessment.</p></div></div>
+      <div class="deliver-item"><span class="tick">✓</span><div><h4>Three-tier jurisdictional conflict map</h4><p>Where federal, state, and municipal law contradict — and how that helps you.</p></div></div>
+      <div class="deliver-item"><span class="tick">✓</span><div><h4>The elements they must prove</h4><p>Exactly what the prosecution has to establish — and where it's weakest.</p></div></div>
+      <div class="deliver-item"><span class="tick">✓</span><div><h4>Recommended pre-trial motions</h4><p>The filings worth raising, so nothing gets waived by silence.</p></div></div>
+      <div class="deliver-item"><span class="tick">✓</span><div><h4>Evidence priorities &amp; critical deadlines</h4><p>What to preserve, what to demand, and the dates you cannot miss.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Objections ===== -->
+<section class="s">
+  <div class="wrap">
+    <div class="kicker">What you're probably thinking</div>
+    <h2>Two honest answers.</h2>
+    <div class="obj-grid">
+      <div class="obj">
+        <div class="q">"I already have a lawyer."</div>
+        <div class="a">Good — then give them ammunition. Inveritas surfaces angles in minutes that
+          take hours of manual research. Walk into your next meeting with the defense vectors
+          already mapped, and make every billed hour count.</div>
+      </div>
+      <div class="obj">
+        <div class="q">"I can't afford this."</div>
+        <div class="a">A single analysis is <strong>$29</strong>. A conviction costs you jobs, housing,
+          rights, and years — for the rest of your life. The question isn't whether you can afford
+          the analysis. It's whether you can afford to walk in blind.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Price ===== -->
+<section class="s">
+  <div class="wrap">
+    <div class="kicker">Start now</div>
+    <h2>One analysis could change everything.</h2>
+    <div class="price-card" style="margin-top:1rem">
+      <div class="price-num">$29<span> / analysis</span></div>
+      <div class="price-label">Full defense analysis · results in ~90 seconds · monthly plans available</div>
+      <a class="btn btn-gold btn-lg" href="/analyze" onclick="track('price')" style="width:100%">Run My Defense Analysis →</a>
+      <div class="price-anchor">Less than an hour of parking at the courthouse. A fraction of one billed legal hour.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Final CTA ===== -->
+<section class="s final">
+  <div class="wrap">
+    <div class="kicker">Don't leave it to chance</div>
+    <h2>Walk into court <em>knowing</em> — not hoping.</h2>
+    <div class="cta-stack">
+      <a class="btn btn-gold btn-lg" href="/analyze" onclick="track('final')">Expose My Defense Vectors →</a>
+      <div class="cta-sub">From <strong>$29</strong> · ~90 seconds · Federal, state &amp; municipal</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer>
+  <div class="wrap">
+    <p class="disclaimer">
+      Inveritas provides legal information and AI-assisted analysis tools for educational and
+      informational purposes only. It is not a law firm, does not provide legal advice, and is not
+      a substitute for a licensed attorney. No outcome is guaranteed. Using Inveritas does not
+      create an attorney–client relationship. If you are facing criminal charges, consult a
+      qualified attorney licensed in your jurisdiction.
+    </p>
+    <div class="foot-links">
+      <a href="/">Home</a>
+      <a href="/analyze">Analysis Engine</a>
+      <a href="/blog">Blog</a>
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Conversion tracking — fire a GA event on every CTA click (links still navigate).
+  function track(loc) {
+    try { if (window.gtag) gtag('event', 'funnel_cta_click', { cta_location: loc }); } catch (e) {}
+  }
+</script>
+</body>
+</html>

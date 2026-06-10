@@ -26,6 +26,31 @@ module.exports = async function handler(req, res) {
   var ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
 
   try {
+    // GET /api/evidence?id=xxx&action=url — fresh signed URL to view/download one file
+    if (req.method === 'GET' && req.query.id && req.query.action === 'url') {
+      var viewId = req.query.id;
+      var { data: viewEv } = await sb.from('evidence')
+        .select('id, file_path, file_name')
+        .eq('id', viewId).eq('user_id', userId).single();
+      if (!viewEv) return res.status(404).json({ error: 'Evidence not found' });
+      if (!viewEv.file_path) return res.status(404).json({ error: 'No file attached to this evidence' });
+
+      var { data: signed, error: signErr } = await sb.storage
+        .from('evidence')
+        .createSignedUrl(viewEv.file_path, 3600); // 1 hour
+      if (signErr || !signed) return res.status(500).json({ error: 'Could not generate file link' });
+
+      // Custody log — non-blocking so a logging/constraint error never blocks viewing
+      try {
+        await sb.from('evidence_custody_log').insert({
+          evidence_id: viewId, action: 'viewed', actor_id: userId,
+          ip_address: ip, notes: 'Evidence file viewed'
+        });
+      } catch (logErr) { /* ignore */ }
+
+      return res.status(200).json({ url: signed.signedUrl, file_name: viewEv.file_name });
+    }
+
     // GET /api/evidence?case_id=xxx — list evidence for a case
     if (req.method === 'GET') {
       var caseId = req.query.case_id;

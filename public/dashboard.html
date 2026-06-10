@@ -615,9 +615,12 @@ function renderCaseDetail(data) {
             '<span class="evidence-type-badge">' + esc(ev.evidence_type) + '</span>' +
             (ev.source ? ' &middot; Source: ' + esc(ev.source) : '') +
             ' &middot; Added ' + new Date(ev.created_at).toLocaleDateString() +
+            (ev.file_name ? ' &middot; ' + esc(ev.file_name) : '') +
           '</div>' +
         '</div>' +
-        (ev.file_name ? '<span style="font-size:.75rem;color:var(--gray)">' + esc(ev.file_name) + '</span>' : '') +
+        (ev.file_path
+          ? '<button class="btn btn-outline btn-sm" onclick="viewEvidence(\'' + ev.id + '\')">View File ↗</button>'
+          : '<span style="font-size:.75rem;color:var(--gray)">No file</span>') +
       '</div>';
     });
     html += '</div>';
@@ -799,6 +802,23 @@ async function createCase() {
 // ===== ADD EVIDENCE =====
 function openAddEvidenceModal() {
   document.getElementById('addEvidenceModal').classList.add('open');
+}
+
+// Open an evidence file in a new tab via a fresh, short-lived signed URL.
+// The blank tab is opened synchronously (inside the click gesture) so popup
+// blockers don't trip; we then point it at the signed URL once it's minted.
+async function viewEvidence(evidenceId) {
+  var win = window.open('', '_blank');
+  try {
+    var r = await fetch('/api/evidence?id=' + encodeURIComponent(evidenceId) + '&action=url', { headers: authHeaders() });
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+    if (!data.url) throw new Error('No file available');
+    if (win) win.location = data.url; else window.location = data.url;
+  } catch (err) {
+    if (win) win.close();
+    showToast('Could not open file: ' + err.message, true);
+  }
 }
 
 async function addEvidence() {

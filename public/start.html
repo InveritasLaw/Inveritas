@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inveritas</title>
+<meta name="robots" content="noindex,nofollow">
+<style>html,body{margin:0;height:100%;background:#060E1A;color:#8A99AB;font-family:-apple-system,'DM Sans',sans-serif}
+.c{height:100%;display:grid;place-items:center;font-size:.85rem;letter-spacing:.04em}</style>
+<script>
+// A/B splitter: assign a funnel variant 50/50, persist it so returning visitors
+// stay on the same angle, then route. Preserves any ?query (utm_*, gclid, etc.).
+(function () {
+  var KEY = 'iv_funnel_variant';
+  var v;
+  try { v = localStorage.getItem(KEY); } catch (e) {}
+  if (v !== 'fear' && v !== 'leverage') {
+    v = Math.random() < 0.5 ? 'fear' : 'leverage';
+    try { localStorage.setItem(KEY, v); } catch (e) {}
+  }
+  var dest = (v === 'leverage') ? '/defense-leverage' : '/defense';
+  location.replace(dest + window.location.search);
+})();
+</script>
+</head>
+<body>
+<div class="c">Loading…</div>
+<noscript>
+  <div class="c"><a href="/defense" style="color:#D4A843">Continue →</a></div>
+</noscript>
+</body>
+</html>

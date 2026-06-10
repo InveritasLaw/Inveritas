@@ -123,3 +123,50 @@ footer { border-top: 1px solid rgba(212,168,67,0.08); padding: 2.5rem 0; text-al
   .obj-grid { grid-template-columns: 1fr; }
   .bar .word { display: none; }
 }
+
+/* ===== Exit / hesitation popup ===== */
+.iv-pop-overlay {
+  position: fixed; inset: 0; z-index: 11000;
+  background: rgba(3,8,16,0.78); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; padding: 1.25rem;
+  opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.iv-pop-overlay.open { opacity: 1; visibility: visible; }
+.iv-pop {
+  position: relative; width: 100%; max-width: 480px;
+  background: linear-gradient(165deg, var(--navy-mid), var(--navy));
+  border: 1px solid rgba(212,168,67,0.35); border-radius: 12px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6); padding: 2.5rem 2rem 2rem;
+  transform: translateY(14px) scale(0.98); transition: transform 0.3s ease;
+  text-align: center; max-height: 92vh; overflow-y: auto;
+}
+.iv-pop-overlay.open .iv-pop { transform: translateY(0) scale(1); }
+.iv-pop-x { position: absolute; top: 0.6rem; right: 0.9rem; background: none; border: none; color: var(--gray); font-size: 1.6rem; line-height: 1; cursor: pointer; padding: 0.25rem; }
+.iv-pop-x:hover { color: var(--white-pure); }
+.iv-pop .eyebrow { color: var(--gold); border-color: rgba(212,168,67,0.35); margin-bottom: 1.1rem; }
+.iv-pop h3 { font-family: var(--font-display); font-weight: 600; font-size: 1.9rem; line-height: 1.15; color: var(--white-pure); margin-bottom: 0.75rem; }
+.iv-pop .iv-pop-sub { color: var(--gray-light); font-size: 0.98rem; margin-bottom: 1.25rem; }
+.iv-pop .iv-bonus { display: flex; gap: 0.6rem; align-items: flex-start; text-align: left; background: rgba(212,168,67,0.08); border: 1px solid rgba(212,168,67,0.2); border-radius: 6px; padding: 0.8rem 1rem; margin-bottom: 1.4rem; font-size: 0.9rem; color: var(--gold-light); }
+.iv-pop .iv-bonus b { color: var(--white-pure); }
+.iv-pop form { display: flex; flex-direction: column; gap: 0.6rem; text-align: left; }
+.iv-pop .iv-row { display: flex; gap: 0.6rem; }
+.iv-pop .iv-row > * { flex: 1; min-width: 0; }
+.iv-pop input, .iv-pop select {
+  width: 100%; padding: 0.8rem 0.9rem; font-family: var(--font-body); font-size: 0.92rem;
+  background: rgba(6,14,26,0.7); border: 1px solid rgba(212,168,67,0.2); border-radius: 4px; color: var(--white);
+}
+.iv-pop input:focus, .iv-pop select:focus { outline: none; border-color: var(--gold); }
+.iv-pop input::placeholder { color: var(--gray); }
+.iv-pop select { color: var(--gray-light); }
+.iv-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.iv-pop .btn { width: 100%; margin-top: 0.3rem; }
+.iv-pop .iv-fine { font-size: 0.72rem; color: var(--gray); margin-top: 0.85rem; line-height: 1.5; }
+.iv-pop .iv-err { color: var(--red); font-size: 0.82rem; min-height: 1rem; text-align: center; }
+.iv-pop .iv-decline { display: block; margin-top: 0.9rem; background: none; border: none; color: var(--gray); font-size: 0.78rem; text-decoration: underline; cursor: pointer; }
+.iv-pop .iv-decline:hover { color: var(--gray-light); }
+/* success state */
+.iv-pop .iv-success { display: none; }
+.iv-pop.is-success .iv-form-state { display: none; }
+.iv-pop.is-success .iv-success { display: block; }
+.iv-pop .iv-check { width: 54px; height: 54px; border-radius: 50%; border: 2px solid var(--green); color: var(--green); display: grid; place-items: center; font-size: 1.6rem; margin: 0 auto 1rem; }
+@media (max-width: 460px) { .iv-pop .iv-row { flex-direction: column; } .iv-pop h3 { font-size: 1.6rem; } }

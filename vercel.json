@@ -15,6 +15,7 @@
     "api/stripe-webhook.js": { "maxDuration": 10 },
     "api/health.js": { "maxDuration": 5 },
     "api/log-event.js": { "maxDuration": 5 },
+    "api/lead.js": { "maxDuration": 10 },
     "api/generate-motion.js": { "maxDuration": 60 },
     "api/platform.js": { "maxDuration": 45 }
   },

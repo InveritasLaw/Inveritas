@@ -7,8 +7,16 @@
  *   - hesitation: engaged but idle for a stretch ("thinking too much")
  *   - a max-time fallback
  *
- * Offer is reframe + bonus (no discount): a free instant guide + reassurance,
- * in exchange for name / email / phone / state -> POST /api/lead.
+ * Design follows the conversion research in docs/funnel-conversion-playbook.md:
+ *   - Two-step (Zeigarnik / foot-in-the-door): a single "Get the checklist"
+ *     button first, then reveal a short form.
+ *   - Form asks only Name / Email / State (state is justified inline). Phone is
+ *     NOT asked here — it's the single biggest abandonment driver. We capture it
+ *     on the thank-you step from already-committed (warm) leads instead.
+ *   - Value-first framing (no "Wait! Before you go!" needy pattern) and a
+ *     NEUTRAL decline link (no confirm-shaming — an FTC-scrutinized dark pattern,
+ *     off the table for a legal brand).
+ *
  * Reads window.IV_VARIANT ('fear' | 'leverage') for tone.
  */
 (function () {
@@ -23,6 +31,7 @@
   var MAX_MS = 60000;                     // hard fallback
   var startedAt = Date.now();
   var shown = false, converted = false, engaged = false;
+  var leadId = null;
 
   // Suppress for visitors already captured or actively converting.
   try { if (localStorage.getItem(DONE_KEY)) return; } catch (e) {}
@@ -32,16 +41,17 @@
     try { if (window.gtag) { params = params || {}; params.variant = VARIANT; gtag('event', name, params); } } catch (e) {}
   }
 
+  // Value-first copy (no needy "before you go" pattern). Efficacy-forward.
   var COPY = {
     fear: {
-      eyebrow: 'Wait — before you go',
-      h: "Don't walk into this blind.",
-      sub: "The clock on your case is already running. Take 60 seconds: get the free checklist, and see the defense angles in your situation."
+      eyebrow: 'Free 1-page checklist',
+      h: 'The first 48 hours decide a lot.',
+      sub: 'A charge is not a conviction — but what you do in the next two days can shape the whole case. Grab the free checklist before you close this.'
     },
     leverage: {
-      eyebrow: 'Before you go',
-      h: "Don't leave your leverage on the table.",
-      sub: "The angles are written into the law. Grab the free checklist and see what Inveritas surfaces in your situation."
+      eyebrow: 'Free 1-page checklist',
+      h: 'Know your first moves.',
+      sub: 'The smartest defense starts in the first 48 hours. Get the free checklist of exactly what to do — and what never to do — right now.'
     }
   };
   var c = COPY[VARIANT] || COPY.fear;
@@ -49,37 +59,50 @@
   var STATES = ['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'];
 
   function build() {
-    var stateOpts = '<option value="">State…</option>' + STATES.map(function (s) { return '<option>' + s + '</option>'; }).join('');
+    var stateOpts = '<option value="">Your state…</option>' + STATES.map(function (s) { return '<option>' + s + '</option>'; }).join('');
     var overlay = document.createElement('div');
     overlay.className = 'iv-pop-overlay';
     overlay.innerHTML =
-      '<div class="iv-pop" role="dialog" aria-modal="true" aria-label="Special offer">' +
+      '<div class="iv-pop" role="dialog" aria-modal="true" aria-label="Free checklist">' +
         '<button class="iv-pop-x" type="button" aria-label="Close">&times;</button>' +
         '<div class="iv-form-state">' +
           '<span class="eyebrow">' + c.eyebrow + '</span>' +
           '<h3>' + c.h + '</h3>' +
           '<p class="iv-pop-sub">' + c.sub + '</p>' +
-          '<div class="iv-bonus"><span>★</span><span><b>Free instantly:</b> “The First 48 Hours After a Charge” checklist — plus your analysis is always yours to keep. No subscription.</span></div>' +
-          '<form novalidate>' +
+          '<div class="iv-bonus"><span>★</span><span><b>“The First 48 Hours After a Charge”</b> — a free, 1-page checklist of what to do and what never to do. Yours instantly.</span></div>' +
+          // Step 1: single low-commitment button (no fields yet)
+          '<div class="iv-step1">' +
+            '<button class="btn btn-gold btn-lg iv-step1-btn" type="button">Get the Free Checklist →</button>' +
+            '<button class="iv-decline" type="button">No thanks</button>' +
+          '</div>' +
+          // Step 2: revealed after the click
+          '<form class="iv-form" novalidate>' +
             '<input class="iv-hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">' +
-            '<input name="name" type="text" placeholder="Full name" autocomplete="name" required>' +
-            '<input name="email" type="email" placeholder="Email" autocomplete="email" required>' +
-            '<div class="iv-row">' +
-              '<input name="phone" type="tel" placeholder="Phone" autocomplete="tel">' +
-              '<select name="state">' + stateOpts + '</select>' +
-            '</div>' +
+            '<input name="name" type="text" placeholder="First name" autocomplete="given-name" required>' +
+            '<input name="email" type="email" placeholder="Email — we’ll send your checklist" autocomplete="email" required>' +
+            '<select name="state" aria-label="State">' + stateOpts + '</select>' +
+            '<div class="iv-statenote">Your state, so we can point you to the right jurisdiction’s rules.</div>' +
             '<div class="iv-err" aria-live="polite"></div>' +
-            '<button class="btn btn-gold btn-lg" type="submit">Send My Free Checklist →</button>' +
+            '<button class="btn btn-gold btn-lg" type="submit">Send Me the Checklist →</button>' +
+            '<div class="iv-fine">Confidential. We never sell your information. No spam. Not legal advice.</div>' +
           '</form>' +
-          '<div class="iv-fine">We’ll send your free guide and may follow up about your case. No spam. Not legal advice.</div>' +
-          '<button class="iv-decline" type="button">No thanks — I’ll risk it</button>' +
         '</div>' +
+        // Success
         '<div class="iv-success">' +
           '<div class="iv-check">✓</div>' +
           '<h3>It’s yours.</h3>' +
-          '<p class="iv-pop-sub">Your checklist is ready — and the smartest next move is seeing the angles in your own case.</p>' +
-          '<a class="btn btn-gold btn-lg" href="/guide-first-48-hours">Open My Free Checklist →</a>' +
-          '<a class="iv-decline" href="/analyze" style="margin-top:1rem">Run my defense analysis →</a>' +
+          '<p class="iv-pop-sub">Your checklist is ready — open it now, and see the defense angles in your own case.</p>' +
+          '<a class="btn btn-gold btn-lg iv-guide-btn" href="/guide-first-48-hours">Open My Free Checklist →</a>' +
+          // Warm-lead phone ask (post-commitment — optional)
+          '<form class="iv-phone-ask" novalidate>' +
+            '<div class="iv-phone-h">Want a free, confidential case review?</div>' +
+            '<div class="iv-phone-sub">Add your number and an advocate can walk you through your options. Optional.</div>' +
+            '<input name="phone" type="tel" placeholder="Phone (optional)" autocomplete="tel">' +
+            '<div class="iv-err iv-perr" aria-live="polite"></div>' +
+            '<button class="btn btn-ghost" type="submit">Request my free call</button>' +
+          '</form>' +
+          '<div class="iv-phone-done">Got it — we’ll reach out. In the meantime:</div>' +
+          '<a class="iv-decline iv-analyze" href="/analyze">See my defense analysis →</a>' +
         '</div>' +
       '</div>';
     document.body.appendChild(overlay);
@@ -106,56 +129,90 @@
     if (reason === 'dismiss') ev('popup_dismiss');
   }
 
+  function post(payload) {
+    return fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); });
+  }
+
   function wire(el) {
     var pop = el.querySelector('.iv-pop');
     el.querySelector('.iv-pop-x').addEventListener('click', function () { close('dismiss'); });
-    el.querySelector('.iv-decline').addEventListener('click', function () { close('dismiss'); });
+    el.querySelector('.iv-decline:not(.iv-analyze)').addEventListener('click', function (e) {
+      if (e.currentTarget.tagName === 'BUTTON') { e.preventDefault(); close('dismiss'); }
+    });
     el.addEventListener('click', function (e) { if (e.target === el) close('dismiss'); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close('dismiss'); });
 
-    var form = el.querySelector('form');
-    var errEl = el.querySelector('.iv-err');
+    // Step 1 -> reveal the form (two-step Zeigarnik / foot-in-the-door)
+    el.querySelector('.iv-step1-btn').addEventListener('click', function () {
+      pop.classList.add('show-form');
+      ev('popup_step1');
+      var n = el.querySelector('input[name=name]');
+      if (n) n.focus();
+    });
+
+    // Step 2 -> capture the lead
+    var form = el.querySelector('.iv-form');
+    var errEl = el.querySelector('.iv-form .iv-err');
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       errEl.textContent = '';
       var data = {
         name: form.name.value.trim(),
         email: form.email.value.trim(),
-        phone: form.phone.value.trim(),
         state: form.state.value,
         company: form.company.value, // honeypot
         variant: VARIANT,
         source: location.pathname,
         trigger: 'popup'
       };
-      if (!data.name) { errEl.textContent = 'Please enter your name.'; return; }
+      if (!data.name) { errEl.textContent = 'Please enter your first name.'; return; }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) { errEl.textContent = 'Please enter a valid email.'; return; }
 
       var btn = form.querySelector('button[type=submit]');
       btn.disabled = true; btn.textContent = 'Sending…';
-
-      fetch('/api/lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-        .then(function (res) {
-          if (!res.ok) throw new Error((res.j && res.j.error) || 'Something went wrong.');
-          try { localStorage.setItem(DONE_KEY, '1'); } catch (e) {}
-          ev('popup_submit');
-          pop.classList.add('is-success');
-        })
-        .catch(function (err) {
-          errEl.textContent = err.message || 'Could not send. Please try again.';
-          btn.disabled = false; btn.textContent = 'Send My Free Checklist →';
-        });
+      post(data).then(function (res) {
+        if (!res.ok) throw new Error((res.j && res.j.error) || 'Something went wrong.');
+        leadId = res.j && res.j.id;
+        try { localStorage.setItem(DONE_KEY, '1'); } catch (e) {}
+        ev('popup_submit');
+        pop.classList.add('is-success');
+      }).catch(function (err) {
+        errEl.textContent = err.message || 'Could not send. Please try again.';
+        btn.disabled = false; btn.textContent = 'Send Me the Checklist →';
+      });
     });
+
+    // Thank-you step -> optional phone append for warm leads
+    var phoneForm = el.querySelector('.iv-phone-ask');
+    var pErr = el.querySelector('.iv-perr');
+    phoneForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      pErr.textContent = '';
+      var phone = phoneForm.phone.value.trim();
+      if (phone.replace(/\D/g, '').length < 7) { pErr.textContent = 'Please enter a valid number.'; return; }
+      var btn = phoneForm.querySelector('button[type=submit]');
+      btn.disabled = true; btn.textContent = 'Sending…';
+      post({ id: leadId, phone: phone }).then(function (res) {
+        if (!res.ok) throw new Error((res.j && res.j.error) || 'Something went wrong.');
+        ev('popup_phone');
+        pop.classList.add('phone-done');
+      }).catch(function (err) {
+        pErr.textContent = err.message || 'Could not send. Please try again.';
+        btn.disabled = false; btn.textContent = 'Request my free call';
+      });
+    });
+
+    el.querySelector('.iv-analyze').addEventListener('click', function () { ev('popup_to_analyze'); });
   }
 
   // ---- Triggers ----
   // Suppress when the visitor is converting (clicked a primary CTA).
   document.addEventListener('click', function (e) {
-    var a = e.target.closest && e.target.closest('a[href="/analyze"]');
+    var a = e.target.closest && e.target.closest('a[href^="/analyze"]');
     if (a) converted = true;
   }, true);
 

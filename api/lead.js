@@ -4,6 +4,14 @@ var { createClient } = require('@supabase/supabase-js');
 // No auth: it's an unauthenticated marketing form. Inserts into the `leads`
 // table with the service-role key. Includes a honeypot + basic validation
 // to cut spam.
+//
+// Two modes:
+//   * INSERT  (no `id` in body): captures name/email/state from the popup and
+//     returns the new row id.
+//   * APPEND  (`id` + `phone` in body): a warm lead added their phone number on
+//     the thank-you step; we attach it to the existing row. Phone is captured
+//     here (post-commitment) rather than in the popup form, because asking for
+//     it up front is the single biggest driver of form abandonment.
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://inveritaslaw.com');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -24,34 +32,45 @@ module.exports = async function handler(req, res) {
   if (body.company) return res.status(200).json({ ok: true });
 
   var clean = function (v, max) { return v ? String(v).trim().slice(0, max) : null; };
-  var name = clean(body.name, 120);
-  var email = clean(body.email, 200);
   var phone = clean(body.phone, 40);
-  var state = clean(body.state, 100);
-
-  if (!name) return res.status(400).json({ error: 'Name is required' });
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return res.status(400).json({ error: 'A valid email is required' });
-  }
-
-  var ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
 
   try {
     var sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-    var { error } = await sb.from('leads').insert({
+
+    // ---- APPEND: attach a phone number to an existing lead ----
+    if (body.id) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(body.id))) {
+        return res.status(400).json({ error: 'Invalid id' });
+      }
+      if (!phone) return res.status(400).json({ error: 'A phone number is required' });
+      var upd = await sb.from('leads').update({ phone: phone }).eq('id', body.id);
+      if (upd.error) throw upd.error;
+      return res.status(200).json({ ok: true });
+    }
+
+    // ---- INSERT: new lead from the popup ----
+    var name = clean(body.name, 120);
+    var email = clean(body.email, 200);
+    if (!name) return res.status(400).json({ error: 'Name is required' });
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'A valid email is required' });
+    }
+
+    var ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+    var ins = await sb.from('leads').insert({
       name: name,
       email: email.toLowerCase(),
       phone: phone,
-      state: state,
+      state: clean(body.state, 100),
       variant: clean(body.variant, 20),
       source: clean(body.source, 300),
       trigger: clean(body.trigger, 30),
       ip_address: String(ip).split(',')[0].trim(),
       created_at: new Date().toISOString()
-    });
-    if (error) throw error;
+    }).select('id').single();
+    if (ins.error) throw ins.error;
 
-    return res.status(201).json({ ok: true });
+    return res.status(201).json({ ok: true, id: ins.data.id });
   } catch (err) {
     console.error('Lead capture error:', err);
     return res.status(500).json({ error: 'Could not save. Please try again.' });

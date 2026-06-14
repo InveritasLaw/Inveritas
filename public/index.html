@@ -732,6 +732,39 @@ footer {
 .btn-student{border-color:rgba(93,232,160,.3);color:var(--green)}
 .cta-wrap{margin-top:2rem}
 .btn-mr{margin-right:1rem}
+
+/* Hero plain-language additions */
+.hero-tagline em{color:var(--gold);font-style:italic}
+.hero-audience{font-size:.85rem;color:var(--gray);margin-top:1.5rem;letter-spacing:.02em;max-width:480px}
+@media(max-width:1024px){.hero-audience{margin-left:auto;margin-right:auto}}
+
+/* Audience per-path links */
+.audience-link{display:inline-block;margin-top:1.1rem;font-size:.82rem;font-weight:600;color:var(--gold);text-decoration:none;letter-spacing:.02em}
+.audience-link:hover{color:var(--gold-light)}
+
+/* Sample analysis preview */
+.sample-section{background:var(--navy-deep)}
+.sample-card{max-width:920px;margin:3rem auto 0;background:rgba(10,22,40,.6);border:1px solid rgba(212,168,67,.15);border-radius:6px;overflow:hidden}
+.sample-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;padding:1.5rem 2rem;border-bottom:1px solid rgba(212,168,67,.1);background:rgba(15,33,64,.4)}
+.sample-charge{font-family:var(--font-display);font-size:1.5rem;font-weight:600;color:var(--white-pure)}
+.sample-meta{font-size:.8rem;color:var(--gray);margin-top:.25rem}
+.sample-tag{flex:0 0 auto;font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(212,168,67,.35);border-radius:100px;padding:.3rem .8rem}
+.sample-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:2rem;padding:2rem}
+.sample-col-label{font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem}
+.vec{padding:1rem 1.1rem;background:rgba(6,14,26,.5);border:1px solid rgba(212,168,67,.08);border-radius:4px;margin-bottom:.85rem}
+.vec-top{display:flex;justify-content:space-between;align-items:center;gap:.75rem;margin-bottom:.4rem}
+.vec-name{font-weight:600;color:var(--white-pure);font-size:.95rem}
+.vec p{font-size:.85rem;color:var(--gray);line-height:1.6}
+.conf{flex:0 0 auto;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .6rem;border-radius:100px}
+.conf-high{color:#5DE8A0;background:rgba(93,232,160,.12)}
+.conf-med{color:#64B4FF;background:rgba(100,180,255,.12)}
+.sample-elems{list-style:none;display:flex;flex-direction:column;gap:.55rem}
+.sample-elems li{font-size:.88rem;color:var(--gray-light);padding-left:1.25rem;position:relative}
+.sample-elems li::before{content:'—';position:absolute;left:0;color:var(--gold-dark)}
+.sample-foot{padding:1.75rem 2rem;border-top:1px solid rgba(212,168,67,.1);text-align:center;background:rgba(15,33,64,.3)}
+.sample-foot .btn{display:inline-flex}
+.sample-fine{font-size:.72rem;color:var(--gray);margin:1rem auto 0;max-width:60ch;line-height:1.6}
+@media(max-width:768px){.sample-grid{grid-template-columns:1fr;gap:1.5rem}.sample-head{flex-direction:column}}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-031BN237WH"></script>
@@ -929,11 +962,12 @@ footer {
     <div class="hero-content">
       <div class="hero-badge">AI-Powered Defense Analysis</div>
       <h1>Turn the law<br><span class="gold">back on itself.</span></h1>
-      <p class="hero-tagline">Inveritas inverts statutory language across federal, state, and municipal jurisdictions to surface defense vectors invisible to manual review.</p>
+      <p class="hero-tagline">Facing a criminal charge? Inveritas reads the actual statutes — federal, state, and municipal — and shows you the weak points in the case against you, in about 90 seconds. (We call it <em>statutory inversion</em>.)</p>
       <div class="hero-ctas">
         <a href="/login" class="btn btn-gold btn-large">Start Your Analysis →</a>
-        <a href="#how-it-works" class="btn btn-outline btn-large">See How It Works</a>
+        <a href="#sample" class="btn btn-outline btn-large">See a Sample First</a>
       </div>
+      <p class="hero-audience">Built for criminal-defense attorneys, people representing themselves, and public-defender offices.</p>
       <div class="hero-stats">
         <div>
           <div class="hero-stat-number">3</div>
@@ -993,6 +1027,62 @@ footer {
   </div>
 </section>
 
+<!-- ===== SAMPLE PREVIEW (proof + preview before login) ===== -->
+<section class="sample-section" id="sample">
+  <div class="container">
+    <div class="text-center animate-on-scroll">
+      <div class="section-label">See it before you sign up</div>
+      <h2 class="section-title">A real analysis — not a sales pitch.</h2>
+      <p class="section-subtitle centered">Here's an excerpt of what Inveritas hands you for a common charge. No login required to look.</p>
+    </div>
+    <div class="sample-card animate-on-scroll">
+      <div class="sample-head">
+        <div>
+          <div class="sample-charge">DUI — first offense</div>
+          <div class="sample-meta">State statute · municipal citation · three-tier analysis</div>
+        </div>
+        <span class="sample-tag">Illustrative sample</span>
+      </div>
+      <div class="sample-grid">
+        <div class="sample-col">
+          <div class="sample-col-label">Defense vectors surfaced</div>
+          <div class="vec">
+            <div class="vec-top"><span class="vec-name">Traffic-stop justification</span><span class="conf conf-high">High</span></div>
+            <p>The stop has to rest on reasonable suspicion. If the cited basis doesn't match the statute's elements, the stop — and everything found after it — is open to a suppression motion.</p>
+          </div>
+          <div class="vec">
+            <div class="vec-top"><span class="vec-name">Breath-test foundation</span><span class="conf conf-med">Medium</span></div>
+            <p>The state must show the device was calibrated and the operator certified on the date of the test. Gaps in that record are a well-documented weak point.</p>
+          </div>
+          <div class="vec">
+            <div class="vec-top"><span class="vec-name">Tier conflict — local vs. state</span><span class="conf conf-high">High</span></div>
+            <p>The municipal citation carries a different penalty band than the state statute. Where the two conflict, the more favorable provision can control.</p>
+          </div>
+        </div>
+        <div class="sample-col">
+          <div class="sample-col-label">What the state must prove</div>
+          <ul class="sample-elems">
+            <li>Operation of a vehicle</li>
+            <li>On a public roadway</li>
+            <li>Impairment, by the statute's definition</li>
+            <li>A valid, admissible chemical test</li>
+          </ul>
+          <div class="sample-col-label" style="margin-top:1.75rem">Deadlines flagged</div>
+          <ul class="sample-elems">
+            <li>DMV hearing request window</li>
+            <li>Evidence-preservation demand</li>
+            <li>Pre-trial motion cutoff</li>
+          </ul>
+        </div>
+      </div>
+      <div class="sample-foot">
+        <a href="/login" class="btn btn-gold">Run this on your own charge →</a>
+        <p class="sample-fine">Illustrative example only — not legal advice and not a prediction of any outcome. Your actual analysis depends on your charge, the facts, and your jurisdiction.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ===== HOW IT WORKS ===== -->
 <section class="how-it-works" id="how-it-works">
   <div class="container">
@@ -1010,7 +1100,7 @@ footer {
       <div class="step animate-on-scroll">
         <div class="step-number">02</div>
         <h3>Statutory Inversion</h3>
-        <p>The engine disassembles the statute's language, definitions, and elements — then systematically inverts each component to identify where the law fails to cover the defendant's conduct.</p>
+        <p>The engine breaks the statute down — its language, definitions, and elements — then tests each piece to find where the law doesn't actually fit what happened.</p>
       </div>
       <div class="step animate-on-scroll">
         <div class="step-number">03</div>
@@ -1156,17 +1246,20 @@ footer {
       <div class="audience-card">
         <div class="audience-icon">⚖️</div>
         <h3>Criminal Defense Attorneys</h3>
-        <p>Surface defense vectors in 90 seconds that would take your paralegal 6 hours. Every statutory element, every definitional gap, every constitutional challenge — automatically.</p>
+        <p>Surface defense vectors in 90 seconds that would take a paralegal hours. Every statutory element, every definitional gap, every constitutional challenge — mapped automatically.</p>
+        <a href="#pricing" class="audience-link">See practitioner &amp; firm plans →</a>
       </div>
       <div class="audience-card">
         <div class="audience-icon">🛡️</div>
-        <h3>Pro Se Defendants</h3>
-        <p>Representing yourself? Inveritas gives you the same statutory analysis a $500/hour attorney would produce. Enter your charge, get your defense.</p>
+        <h3>People Representing Themselves</h3>
+        <p>Going it alone? Inveritas gives you the kind of statutory analysis a defense attorney would run — in plain language. Enter your charge, see your options.</p>
+        <a href="#sample" class="audience-link">See a sample analysis →</a>
       </div>
       <div class="audience-card">
         <div class="audience-icon">🏛️</div>
         <h3>Public Defender Offices</h3>
-        <p>300 cases per attorney? Force-multiply your entire office. Institutional licensing means every defender gets AI-powered analysis on every case.</p>
+        <p>Crushing caseloads? Force-multiply your whole office. Institutional licensing puts AI-assisted analysis on every case, for every defender.</p>
+        <a href="#cta" class="audience-link">Talk to us about access →</a>
       </div>
     </div>
   </div>

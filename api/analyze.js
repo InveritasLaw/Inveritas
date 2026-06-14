@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const verify = require('./_utils/verify');
 
 const SYSTEM_PROMPT = `You are a precision legal defense analyst specializing in STATUTORY INVERSION across three tiers of American law: Federal, State, and County/Municipal.
 
@@ -293,35 +294,9 @@ function checkRateLimit(ip) {
 }
 
 // ===== STATUTE REFERENCE EXTRACTOR =====
-function extractStatuteRef(charge, situation, state) {
-  const text = (charge + ' ' + situation).toLowerCase();
-  const st = state.toLowerCase();
-  
-  if (st === 'texas') {
-    let m = text.match(/(?:texas\s+)?penal\s+code\s*(?:§|sec(?:tion)?\.?\s*)?\s*([\d.]+)/i);
-    if (m) return { key: 'tx-penal-' + m[1], code: 'Penal Code', section: m[1], url: 'https://law.justia.com/codes/texas/penal-code/title-10/chapter-' + m[1].split('.')[0] + '/section-' + m[1].replace('.', '-') + '/' };
-
-    m = text.match(/(?:texas\s+)?transp(?:ortation)?\s*code\s*(?:§|sec(?:tion)?\.?\s*)?\s*([\d.]+)/i);
-    if (m) { const sec = m[1]; return { key: 'tx-transport-' + sec, code: 'Transportation Code', section: sec, url: 'https://law.justia.com/codes/texas/transportation-code/title-7/subtitle-c/chapter-' + sec.split('.')[0] + '/section-' + sec.replace('.', '-') + '/' }; }
-
-    m = text.match(/(?:texas\s+)?(?:code\s+of\s+)?crim(?:inal)?\s*proc(?:edure)?\s*(?:art(?:icle)?\.?\s*)?\s*([\d.]+)/i);
-    if (m) return { key: 'tx-ccp-' + m[1], code: 'Code of Criminal Procedure', section: m[1], url: null };
-
-    if (text.includes('dwi') || text.includes('driving while intoxicated'))
-      return { key: 'tx-penal-49.04', code: 'Penal Code', section: '49.04', url: 'https://law.justia.com/codes/texas/penal-code/title-10/chapter-49/section-49-04/' };
-    if (text.includes('speeding') || text.includes('speed limit'))
-      return { key: 'tx-transport-545.351', code: 'Transportation Code', section: '545.351', url: 'https://law.justia.com/codes/texas/transportation-code/title-7/subtitle-c/chapter-545/section-545-351/' };
-    if (text.includes('assault'))
-      return { key: 'tx-penal-22.01', code: 'Penal Code', section: '22.01', url: 'https://law.justia.com/codes/texas/penal-code/title-5/chapter-22/section-22-01/' };
-    if (text.includes('possession') && (text.includes('marijuana') || text.includes('thc')))
-      return { key: 'tx-hsc-481.121', code: 'Health & Safety Code', section: '481.121', url: 'https://law.justia.com/codes/texas/health-and-safety-code/title-6/subtitle-c/chapter-481/subchapter-d/section-481-121/' };
-    if (text.includes('theft') || text.includes('shoplifting'))
-      return { key: 'tx-penal-31.03', code: 'Penal Code', section: '31.03', url: 'https://law.justia.com/codes/texas/penal-code/title-7/chapter-31/section-31-03/' };
-    if (text.includes('evading'))
-      return { key: 'tx-penal-38.04', code: 'Penal Code', section: '38.04', url: 'https://law.justia.com/codes/texas/penal-code/title-8/chapter-38/section-38-04/' };
-  }
-  return null;
-}
+// Canonical implementation lives in api/_utils/verify.js (shared with the
+// motion path) so the two cannot drift. It covers Texas, federal U.S.C., and
+// generic "<...> Code § N" recognition for any state.
 
 // ===== MAIN HANDLER =====
 module.exports = async function handler(req, res) {
@@ -430,59 +405,12 @@ module.exports = async function handler(req, res) {
     // Fetch actual statute text from Justia and inject into prompt
     let statuteText = '';
     try {
-      // Build Justia URL from charge and state
-      const statuteRef = extractStatuteRef(safeCharge, safeSituation, safeState);
-      if (statuteRef) {
-        // Check cache first
-        if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
-          const sbAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-          const { data: cached } = await sbAdmin.from('statute_cache')
-            .select('full_text, source_url')
-            .eq('statute_key', statuteRef.key)
-            .gt('expires_at', new Date().toISOString())
-            .single();
-          
-          if (cached && cached.full_text) {
-            statuteText = cached.full_text;
-          } else {
-            // Fetch from Justia
-            const justiaUrl = statuteRef.url;
-            if (justiaUrl) {
-              const sResp = await fetch(justiaUrl, { headers: { 'User-Agent': 'Inveritas Legal Research/1.0' } });
-              if (sResp.ok) {
-                const html = await sResp.text();
-                // Extract statute text from Justia HTML
-                const textMatch = html.match(/<div[^>]*class="[^"]*codes-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i)
-                  || html.match(/<div[^>]*id="[^"]*codes-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i)
-                  || html.match(/<div[^>]*class="[^"]*primary-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
-                if (textMatch) {
-                  statuteText = textMatch[1]
-                    .replace(/<[^>]+>/g, ' ')
-                    .replace(/&nbsp;/g, ' ')
-                    .replace(/&amp;/g, '&')
-                    .replace(/&lt;/g, '<')
-                    .replace(/&gt;/g, '>')
-                    .replace(/\s+/g, ' ')
-                    .trim()
-                    .slice(0, 4000);
-                }
-                // Cache it
-                if (statuteText && SUPABASE_URL) {
-                  await sbAdmin.from('statute_cache').upsert({
-                    statute_key: statuteRef.key,
-                    state: safeState,
-                    code_name: statuteRef.code,
-                    section: statuteRef.section,
-                    full_text: statuteText,
-                    source_url: justiaUrl,
-                    fetched_at: new Date().toISOString(),
-                    expires_at: new Date(Date.now() + 30 * 86400000).toISOString()
-                  });
-                }
-              }
-            }
-          }
-        }
+      // Resolve a statute reference (Texas, federal, or generic) and fetch the
+      // real official text via the shared verifier (handles cache + Justia).
+      const statuteRef = verify.extractStatuteRefs(safeCharge, safeSituation, safeState)[0];
+      if (statuteRef && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+        const sbAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+        statuteText = await verify.fetchStatuteText(statuteRef, sbAdmin);
       }
     } catch (statErr) {
       console.error('Statute fetch failed (non-blocking):', statErr.message);
@@ -795,6 +723,16 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
           // Add statute source info if we fetched it
           if (statuteText) {
             verification.statute_source = 'Real statute text injected from Justia — analysis grounded in actual statutory language';
+          }
+
+          // Stamp statute SECTION numbers GROUNDED / UNVERIFIED against the
+          // fetched official text (CourtListener only covers case law).
+          try {
+            verification.statute_grounding = verify.stampStatuteCitations(
+              verify.extractStatuteCitations(allText), statuteText
+            );
+          } catch (sgErr) {
+            console.error('Statute grounding stamp failed (non-blocking):', sgErr.message);
           }
 
           // Add verification to parsed result

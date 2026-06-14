@@ -1,4 +1,5 @@
 var { createClient } = require('@supabase/supabase-js');
+var verify = require('./_utils/verify');
 
 // =====================================================================
 // INVERITAS — UPL-SAFE DRAFT MOTION GENERATOR
@@ -442,8 +443,80 @@ module.exports = async function handler(req, res) {
     }
 
     // ===== PRINCIPLE 6: CITATION INTEGRITY AUDIT =====
-    var verifiedCount = (generatedText.match(/\[VERIFIED/g) || []).length;
-    var unverifiedCount = (generatedText.match(/\[UNVERIFIED/g) || []).length;
+    // The model self-tags [VERIFIED]/[UNVERIFIED], but self-attestation is exactly
+    // what hallucinates. We now run the SAME real verification the analysis path
+    // uses (shared api/_utils/verify): case law against CourtListener's database,
+    // statute sections against official fetched text, plus the hallucination
+    // blocklist. A document that gets FILED must not rely on the model's word.
+    var modelVerifiedTags = (generatedText.match(/\[VERIFIED/g) || []).length;
+    var modelUnverifiedTags = (generatedText.match(/\[UNVERIFIED/g) || []).length;
+
+    var citationReport = {
+      checked: false,
+      case_law: { verified: [], not_found: [], blocked: [], links: {} },
+      statutes: [],
+      service: 'courtlistener+justia'
+    };
+    try {
+      var CL_TOKEN = process.env.COURTLISTENER_API_TOKEN;
+
+      // Ground the governing statute (real official text) for cross-checking sections
+      var sRef = verify.extractStatuteRefs(caseData.charge || '', caseData.description || '', caseData.state || '')[0];
+      var groundedStatuteText = sRef ? await verify.fetchStatuteText(sRef, sb) : '';
+
+      // Verify case citations in the actual document text
+      if (CL_TOKEN) {
+        var cv = await verify.verifyCaseCitations(generatedText, CL_TOKEN);
+        citationReport.checked = true;
+        citationReport.case_law.verified = cv.verified;
+        citationReport.case_law.not_found = cv.notFound;
+        citationReport.case_law.links = cv.links;
+        citationReport.case_law.blocked = await verify.checkAndUpdateBlocklist(sb, cv.notFound);
+      }
+
+      // Stamp statute sections GROUNDED / UNVERIFIED
+      citationReport.statutes = verify.stampStatuteCitations(
+        verify.extractStatuteCitations(generatedText), groundedStatuteText
+      );
+    } catch (verr) {
+      console.error('Motion citation verification failed (non-blocking):', verr.message);
+    }
+
+    // Real (database-backed) counts — these supersede the model's self-report
+    var dbNotFound = citationReport.case_law.not_found.length + citationReport.case_law.blocked.length;
+    var dbVerified = citationReport.case_law.verified.length;
+    var ungroundedStatutes = citationReport.statutes.filter(function (s) { return s.status !== 'GROUNDED'; });
+    // Filing is "high risk" if anything could not be confirmed against a real source.
+    var requiresAcknowledgment = dbNotFound > 0 || ungroundedStatutes.length > 0 || modelUnverifiedTags > 0;
+
+    // Counts stored/displayed are the REAL ones (fall back to model tags only if
+    // CourtListener was unavailable, so we never over-state confidence).
+    var verifiedCount = citationReport.checked ? dbVerified : 0;
+    var unverifiedCount = citationReport.checked ? dbNotFound : modelUnverifiedTags;
+
+    // Append a verification report into the document body so it travels with the file
+    generatedText += '\n\n══════════════════════════════════════════════\n' +
+      'CITATION VERIFICATION REPORT (Inveritas automated check)\n' +
+      '══════════════════════════════════════════════\n';
+    if (citationReport.checked) {
+      generatedText += 'Case law checked against CourtListener\'s database.\n';
+      generatedText += '  Confirmed real: ' + dbVerified +
+        (citationReport.case_law.verified.length ? ' (' + citationReport.case_law.verified.join('; ') + ')' : '') + '\n';
+      if (citationReport.case_law.not_found.length)
+        generatedText += '  ⚠ NOT FOUND (possible hallucination — DO NOT FILE without confirming): ' + citationReport.case_law.not_found.join('; ') + '\n';
+      if (citationReport.case_law.blocked.length)
+        generatedText += '  🚫 KNOWN-BAD (previously flagged as hallucinated): ' + citationReport.case_law.blocked.join('; ') + '\n';
+    } else {
+      generatedText += 'Automated case-law verification was unavailable for this run — treat EVERY citation as unverified.\n';
+    }
+    if (citationReport.statutes.length) {
+      generatedText += 'Statute sections:\n';
+      citationReport.statutes.forEach(function (s) {
+        generatedText += '  ' + (s.status === 'GROUNDED' ? '✓ GROUNDED' : '⚠ UNVERIFIED') + ': ' + s.citation + '\n';
+      });
+    }
+    generatedText += 'Every item not marked confirmed/GROUNDED must be independently verified before filing.\n' +
+      '══════════════════════════════════════════════\n';
 
     // ===== SAVE TO DATABASE =====
     var evidenceSnapshot = evidence.map(function(ev) {
@@ -465,6 +538,9 @@ module.exports = async function handler(req, res) {
       citation_flags_required: true,
       verified_citations: verifiedCount,
       unverified_citations: unverifiedCount,
+      citation_report: citationReport,
+      requires_acknowledgment: requiresAcknowledgment,
+      model_self_tagged: { verified: modelVerifiedTags, unverified: modelUnverifiedTags },
       model_version: 'claude-sonnet-4-20250514',
       generated_at: new Date().toISOString(),
       architectural_principles: [
@@ -494,7 +570,7 @@ module.exports = async function handler(req, res) {
       jurisdiction_state: caseData.state,
       jurisdiction_county: caseData.county,
       jurisdiction_disclosure: jurisdictionDisclosure,
-      citations: { verified: verifiedCount, unverified: unverifiedCount },
+      citations: { verified: verifiedCount, unverified: unverifiedCount, report: citationReport, requires_acknowledgment: requiresAcknowledgment },
       unverified_citation_count: unverifiedCount,
       verified_citation_count: verifiedCount
     }).select().single();
@@ -525,6 +601,8 @@ module.exports = async function handler(req, res) {
         completeness_score: completeness.score,
         jurisdiction_disclosure: jurisdictionDisclosure,
         citations: { verified: verifiedCount, unverified: unverifiedCount },
+        verification: citationReport,
+        requires_acknowledgment: requiresAcknowledgment,
         upl_compliance: uplCompliance,
         created_at: new Date().toISOString()
       }

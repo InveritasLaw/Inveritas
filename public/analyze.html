@@ -747,6 +747,16 @@ function renderResults(r) {
         cvHtml += '<div class="cv-line-red">🔄 Dual-Model Flagged: ' + suspect.map(c => esc(c.citation)).join(', ') + '</div>';
       }
     }
+    if (cv.statute_grounding?.length) {
+      const grounded = cv.statute_grounding.filter(s => s.status === 'GROUNDED');
+      const ungrounded = cv.statute_grounding.filter(s => s.status !== 'GROUNDED');
+      if (grounded.length) {
+        cvHtml += '<div class="cv-line"><span style="color:var(--green)">📜 Statutes grounded:</span> ' + grounded.map(s => esc(s.citation)).join(', ') + '</div>';
+      }
+      if (ungrounded.length) {
+        cvHtml += '<div class="cv-line-red">📜 Statute sections unverified (confirm independently): ' + ungrounded.map(s => esc(s.citation)).join(', ') + '</div>';
+      }
+    }
     if (cv.warning) {
       cvHtml += `<div class="warn">${esc(cv.warning)}</div>`;
     }

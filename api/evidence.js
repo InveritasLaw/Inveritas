@@ -1,5 +1,14 @@
 var { createClient } = require('@supabase/supabase-js');
-var crypto = require('crypto');
+var { isOwnedEvidencePath } = require('./_utils/storage-path');
+
+async function recordCustody(sb, entry) {
+  try {
+    var result = await sb.from('evidence_custody_log').insert(entry);
+    if (result.error) throw result.error;
+  } catch (err) {
+    console.error('Evidence custody log failed:', err.message);
+  }
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://inveritaslaw.com');
@@ -17,23 +26,24 @@ module.exports = async function handler(req, res) {
   var token = authHeader.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Not authenticated' });
 
-  var sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-  var authResult = await sb.auth.getUser(token);
-  if (authResult.error || !authResult.data.user) {
-    return res.status(401).json({ error: 'Invalid session' });
-  }
-  var userId = authResult.data.user.id;
-  var ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
-
   try {
+    var sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+    var authResult = await sb.auth.getUser(token);
+    if (authResult.error || !authResult.data?.user) {
+      return res.status(401).json({ error: 'Invalid session' });
+    }
+    var userId = authResult.data.user.id;
+    var ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+
     // GET /api/evidence?id=xxx&action=url — fresh signed URL to view/download one file
     if (req.method === 'GET' && req.query.id && req.query.action === 'url') {
       var viewId = req.query.id;
       var { data: viewEv } = await sb.from('evidence')
-        .select('id, file_path, file_name')
+        .select('id, case_id, file_path, file_name')
         .eq('id', viewId).eq('user_id', userId).single();
       if (!viewEv) return res.status(404).json({ error: 'Evidence not found' });
       if (!viewEv.file_path) return res.status(404).json({ error: 'No file attached to this evidence' });
+      if (!isOwnedEvidencePath(viewEv.file_path, userId, viewEv.case_id)) return res.status(403).json({ error: 'File ownership could not be verified' });
 
       var { data: signed, error: signErr } = await sb.storage
         .from('evidence')
@@ -41,12 +51,10 @@ module.exports = async function handler(req, res) {
       if (signErr || !signed) return res.status(500).json({ error: 'Could not generate file link' });
 
       // Custody log — non-blocking so a logging/constraint error never blocks viewing
-      try {
-        await sb.from('evidence_custody_log').insert({
+      await recordCustody(sb, {
           evidence_id: viewId, action: 'viewed', actor_id: userId,
           ip_address: ip, notes: 'Evidence file viewed'
-        });
-      } catch (logErr) { /* ignore */ }
+      });
 
       return res.status(200).json({ url: signed.signedUrl, file_name: viewEv.file_name });
     }
@@ -63,17 +71,19 @@ module.exports = async function handler(req, res) {
 
       var { data: evidenceList, error } = await sb.from('evidence')
         .select('*')
-        .eq('case_id', caseId)
+        .eq('case_id', caseId).eq('user_id', userId)
         .order('created_at', { ascending: false });
       if (error) throw error;
 
       // Generate signed URLs for files
       for (var i = 0; i < (evidenceList || []).length; i++) {
         var ev = evidenceList[i];
-        if (ev.file_path) {
-          var { data: signedData } = await sb.storage
+        ev.signed_url = null;
+        if (ev.file_path && isOwnedEvidencePath(ev.file_path, userId, caseId)) {
+          var { data: signedData, error: signedError } = await sb.storage
             .from('evidence')
             .createSignedUrl(ev.file_path, 3600); // 1 hour
+          if (signedError) throw signedError;
           ev.signed_url = signedData ? signedData.signedUrl : null;
         }
       }
@@ -91,6 +101,10 @@ module.exports = async function handler(req, res) {
       var { data: caseCheck } = await sb.from('cases')
         .select('id').eq('id', caseId).eq('user_id', userId).single();
       if (!caseCheck) return res.status(404).json({ error: 'Case not found' });
+
+      if (body.file_path && !isOwnedEvidencePath(body.file_path, userId, caseId)) {
+        return res.status(400).json({ error: 'File must belong to this user and case' });
+      }
 
       var title = String(body.title || 'Untitled Evidence').slice(0, 200);
       var description = body.description ? String(body.description).slice(0, 2000) : null;
@@ -117,7 +131,7 @@ module.exports = async function handler(req, res) {
       if (error) throw error;
 
       // Create custody log entry
-      await sb.from('evidence_custody_log').insert({
+      await recordCustody(sb, {
         evidence_id: evidence.id,
         action: 'uploaded',
         actor_id: userId,
@@ -135,14 +149,15 @@ module.exports = async function handler(req, res) {
 
       // Verify ownership
       var { data: ev } = await sb.from('evidence')
-        .select('id, file_path')
+        .select('id, case_id, file_path')
         .eq('id', evidenceId)
         .eq('user_id', userId)
         .single();
       if (!ev) return res.status(404).json({ error: 'Evidence not found' });
+      if (ev.file_path && !isOwnedEvidencePath(ev.file_path, userId, ev.case_id)) return res.status(403).json({ error: 'File ownership could not be verified' });
 
       // Log before delete
-      await sb.from('evidence_custody_log').insert({
+      await recordCustody(sb, {
         evidence_id: evidenceId,
         action: 'deleted',
         actor_id: userId,
@@ -152,7 +167,8 @@ module.exports = async function handler(req, res) {
 
       // Delete file from storage
       if (ev.file_path) {
-        await sb.storage.from('evidence').remove([ev.file_path]);
+        var removal = await sb.storage.from('evidence').remove([ev.file_path]);
+        if (removal.error) throw removal.error;
       }
 
       // Delete metadata record
@@ -167,6 +183,6 @@ module.exports = async function handler(req, res) {
 
   } catch (err) {
     console.error('Evidence API error:', err);
-    return res.status(500).json({ error: 'Server error: ' + err.message });
+    return res.status(500).json({ error: 'Evidence operation failed. Please try again.' });
   }
 };

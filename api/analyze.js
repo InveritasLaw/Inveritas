@@ -1,3 +1,4 @@
+const { getModel } = require('./_utils/model');
 const { createClient } = require('@supabase/supabase-js');
 const verify = require('./_utils/verify');
 
@@ -430,7 +431,7 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
 
     // ===== CALL ANTHROPIC (with retry for overloaded) =====
     const apiBody = JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: getModel(),
       max_tokens: 8192,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userMessage }]
@@ -683,7 +684,7 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY_CHECK, 'anthropic-version': '2023-06-01' },
                   body: JSON.stringify({
-                    model: 'claude-sonnet-4-20250514',
+                    model: getModel(),
                     max_tokens: 1024,
                     messages: [{ role: 'user', content: 'For each citation below, respond ONLY with a JSON array. Each item: {"citation":"the citation","real":true/false,"confidence":"high/medium/low"}. If you are not confident a case exists with that exact name and holding, mark real:false.\n\n' + citationsToCheck.join('\n') }]
                   })

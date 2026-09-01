@@ -1,3 +1,4 @@
+const { fulfillEvent } = require('./_utils/fulfillment');
 const { createClient } = require('@supabase/supabase-js');
 
 // ----------------------------------------------------------------------------
@@ -84,94 +85,12 @@ async function handler(req, res) {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object;
-        const customerEmail = session.customer_details?.email || session.customer_email;
-        const tier = session.metadata?.tier || 'single';
-        const customerId = session.customer;
-        const subscriptionId = session.subscription;
-
-        if (customerEmail) {
-          // Find user by email
-          const { data: users } = await supabase.auth.admin.listUsers();
-          const user = users?.users?.find(u => u.email === customerEmail);
-
-          if (user) {
-            await supabase.from('user_profiles').upsert({
-              user_id: user.id,
-              email: customerEmail,
-              subscription_tier: tier,
-              stripe_customer_id: customerId || null,
-              stripe_subscription_id: subscriptionId || null,
-              updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id' });
-
-            // Log the payment event
-            await supabase.from('event_logs').insert({
-              event_type: 'payment_completed',
-              user_id: user.id,
-              metadata: JSON.stringify({
-                tier,
-                amount: session.amount_total,
-                session_id: session.id
-              }),
-              created_at: new Date().toISOString()
-            });
-
-            console.log('stripe-webhook: subscription_tier set to', tier, 'for', customerEmail, '| session', session.id);
-          } else {
-            console.error('stripe-webhook: no user found for email', customerEmail, '| session', session.id);
-          }
-        } else {
-          console.error('stripe-webhook: checkout.session.completed had no email | session', session.id);
-        }
-        break;
-      }
-
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object;
-        const customerId = subscription.customer;
-        const status = subscription.status;
-
-        // Find profile by stripe customer ID
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('user_id')
-          .eq('stripe_customer_id', customerId)
-          .single();
-
-        if (profile) {
-          if (status === 'active') {
-            // Subscription is active — keep current tier
-          } else if (status === 'canceled' || status === 'unpaid' || status === 'past_due') {
-            // Downgrade to none
-            await supabase.from('user_profiles').update({
-              subscription_tier: 'none',
-              updated_at: new Date().toISOString()
-            }).eq('stripe_customer_id', customerId);
-          }
-        }
-        break;
-      }
-
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object;
-        const customerId = subscription.customer;
-
-        await supabase.from('user_profiles').update({
-          subscription_tier: 'none',
-          stripe_subscription_id: null,
-          updated_at: new Date().toISOString()
-        }).eq('stripe_customer_id', customerId);
-        break;
-      }
-    }
+    await fulfillEvent(supabase, event);
 
     return res.status(200).json({ received: true });
   } catch (err) {
     console.error('Webhook processing error:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Fulfillment failed; retry required' });
   }
 }
 

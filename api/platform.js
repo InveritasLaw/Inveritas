@@ -1,3 +1,4 @@
+const { getModel } = require('./_utils/model');
 var { createClient } = require('@supabase/supabase-js');
 
 // =====================================================================
@@ -245,7 +246,7 @@ module.exports = async function handler(req, res) {
       var apiResp = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4096, system: tool.system, messages: [{ role: 'user', content: prompt }] })
+        body: JSON.stringify({ model: getModel(), max_tokens: 4096, system: tool.system, messages: [{ role: 'user', content: prompt }] })
       });
       var apiData = await apiResp.json();
       if (apiData.error) return res.status(502).json({ error: 'Service error: ' + (apiData.error.message || 'Unknown') });
@@ -300,7 +301,7 @@ module.exports = async function handler(req, res) {
           if (aR.data.result && aR.data.result.critical_warnings) p += 'Warnings: ' + aR.data.result.critical_warnings.join('; ') + '\n';
           p += '\nReturn ONLY valid JSON array: [{"deadline_type":"speedy_trial|statute_of_limitations|motion_filing|discovery|appeal|arraignment|pretrial|trial|response_due","title":"title","description":"explanation","days_from_charge":number,"jurisdiction_note":"source"}]';
 
-          var dResp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' }, body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2048, messages: [{ role: 'user', content: p }] }) });
+          var dResp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' }, body: JSON.stringify({ model: getModel(), max_tokens: 2048, messages: [{ role: 'user', content: p }] }) });
           var dData = await dResp.json();
           var dTxt = ''; if (dData.content) dData.content.forEach(function(c) { if (c.type === 'text') dTxt += c.text; });
           var deadlines = []; try { deadlines = JSON.parse(dTxt.replace(/```json|```/g, '').trim()); } catch (e) { deadlines = []; }

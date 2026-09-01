@@ -1330,36 +1330,11 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 });
 // Stripe Checkout
-async function checkout(tier) {
-  const btn = event.target;
-  const originalText = btn.textContent;
-  btn.textContent = 'Redirecting...';
-  btn.disabled = true;
-
-  try {
-    const res = await fetch('/api/create-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tier })
-    });
-
-    const data = await res.json();
-
-    if (data.error) {
-      alert('Checkout error: ' + data.error);
-      btn.textContent = originalText;
-      btn.disabled = false;
-      return;
-    }
-
-    // Redirect to Stripe Checkout
-    window.location.href = data.url;
-  } catch (err) {
-    alert('Connection error. Please try again.');
-    btn.textContent = originalText;
-    btn.disabled = false;
-  }
+function checkout(tier) {
+  if (!['single', 'practitioner', 'firm'].includes(tier)) return;
+  window.location.href = '/login?checkout=' + encodeURIComponent(tier);
 }
+
 </script>
 
 <!-- CONSENT BANNER -->

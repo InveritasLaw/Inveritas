@@ -1,3 +1,4 @@
+const { getModel } = require('./_utils/model');
 var { createClient } = require('@supabase/supabase-js');
 
 // Same system prompt as analyze.js — keep in sync
@@ -196,7 +197,7 @@ module.exports = async function handler(req, res) {
             'anthropic-version': '2023-06-01'
           },
           body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
+            model: getModel(),
             max_tokens: 8192,
             system: SYSTEM_PROMPT_HEADER,
             messages: [{ role: 'user', content: userMessage }]
@@ -259,7 +260,7 @@ module.exports = async function handler(req, res) {
       situation: situation.slice(0, 5000),
       evidence_snapshot: evidenceSnapshot,
       result: result,
-      model_version: 'claude-sonnet-4-20250514',
+      model_version: getModel(),
       trigger_reason: reason
     }).select().single();
 

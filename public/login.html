@@ -185,11 +185,17 @@ const SUPABASE_URL = 'https://dmkuskjfvnniqpjmlnmz.supabase.co'; // Replace afte
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRta3Vza2pmdm5uaXFwam1sbm16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NzcwMzIsImV4cCI6MjA5MDM1MzAzMn0.F7vzx6RwdnpT9DB1LT1y5uP9WXdWNpcytwSFFsv7D4o'; // Replace after setup
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+function accountDestination() {
+  const tier = new URLSearchParams(window.location.search).get('checkout');
+  return ['single', 'practitioner', 'firm'].includes(tier)
+    ? '/dashboard?checkout=' + encodeURIComponent(tier) : '/dashboard';
+}
+
 // Check if already logged in
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
-    window.location.href = '/dashboard';
+    window.location.href = accountDestination();
   }
   // Auto-switch to student tab if ?student=true
   var params = new URLSearchParams(window.location.search);
@@ -239,7 +245,7 @@ async function doLogin() {
     // Log the login event
     await logEvent('login', { email });
     
-    window.location.href = '/dashboard';
+    window.location.href = accountDestination();
   } catch (err) {
     showMsg(err.message || 'Login failed.', 'error');
     btn.disabled = false; btn.textContent = 'Sign In';
@@ -283,7 +289,7 @@ async function doSignup() {
 
     if (data.session) {
       // Auto-confirmed — redirect to analysis
-      window.location.href = '/dashboard';
+      window.location.href = accountDestination();
     } else {
       // Email confirmation required
       showMsg('Account created! Check your email to confirm, then sign in.', 'success');
@@ -382,7 +388,7 @@ async function doStudentSignup() {
     }
 
     if (data.session) {
-      window.location.href = '/dashboard';
+      window.location.href = accountDestination();
     } else {
       showMsg('Student account created! Check your .edu email to confirm, then sign in. Your student status will be verified within 24 hours.', 'success');
       btn.disabled = false; btn.textContent = 'Create Student Account';

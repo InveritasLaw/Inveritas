@@ -478,7 +478,16 @@ var historyLoaded = false;
 
   loadCases();
   loadSubscription();
-})();
+  var checkoutTier = new URLSearchParams(window.location.search).get('checkout');
+  if (['single', 'practitioner', 'firm'].includes(checkoutTier)) {
+    window.history.replaceState(null, '', '/dashboard');
+    await upgradeCheckout(checkoutTier);
+  }
+})().catch(function(err) {
+  console.error('Dashboard initialization failed:', err);
+  document.getElementById('loadingState').textContent = 'Could not load your account. Please refresh and try again.';
+  document.getElementById('loadingState').style.display = 'block';
+});
 
 function authHeaders() {
   return {
@@ -1178,7 +1187,7 @@ async function loadSubscription() {
 
       html += '</div>';
       if (tier === 'practitioner') {
-        html += '<p style="font-size:.78rem;color:var(--gray);margin-top:.75rem">Upgrading mid-cycle? Stripe automatically prorates — unused time on your current plan is credited toward the new one.</p>';
+        html += '<p style="font-size:.78rem;color:var(--gray);margin-top:.75rem">Contact support to change an existing subscription. A second subscription will not be created through this checkout.</p>';
       }
       html += '</div>';
     }

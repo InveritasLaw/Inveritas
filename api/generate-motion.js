@@ -1,3 +1,4 @@
+const { getModel } = require('./_utils/model');
 var { createClient } = require('@supabase/supabase-js');
 var verify = require('./_utils/verify');
 
@@ -415,7 +416,7 @@ module.exports = async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: getModel(),
         max_tokens: 8192,
         system: GENERATION_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: prompt }]
@@ -541,7 +542,7 @@ module.exports = async function handler(req, res) {
       citation_report: citationReport,
       requires_acknowledgment: requiresAcknowledgment,
       model_self_tagged: { verified: modelVerifiedTags, unverified: modelUnverifiedTags },
-      model_version: 'claude-sonnet-4-20250514',
+      model_version: getModel(),
       generated_at: new Date().toISOString(),
       architectural_principles: [
         'refusal_architecture',

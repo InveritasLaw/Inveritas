@@ -34,24 +34,18 @@ async function fulfillEvent(sb, event) {
     const tier = session.metadata?.tier;
     if (!TIERS.has(tier)) throw new Error('Checkout tier is invalid');
     const user = await checkoutUser(sb, session);
-    const profile = required(await sb.from('user_profiles').select('subscription_tier, stripe_subscription_id, stripe_customer_id').eq('user_id', user.id).maybeSingle(), 'Profile lookup failed');
-    // A one-off purchase must never erase an existing recurring subscription.
-    if (tier === 'single' && profile?.stripe_subscription_id) {
-      throw new Error('One-off purchase on subscription requires reconciliation');
-    }
-    if (tier !== 'single' && profile?.stripe_subscription_id && profile.stripe_subscription_id !== session.subscription) {
-      throw new Error('Duplicate subscription requires reconciliation');
-    }
-    required(await sb.from('user_profiles').upsert({
-      user_id: user.id,
-      email: user.email,
-      subscription_tier: tier,
-      stripe_customer_id: session.customer || profile?.stripe_customer_id || null,
-      stripe_subscription_id: session.subscription || null,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'user_id' }), 'Entitlement write failed');
-    // This log is diagnostic; it is not an idempotent revenue ledger. Credit
-    // grants must not be added here until the transactional migration exists.
+    required(await sb.rpc('fulfill_checkout_payment', {
+      p_stripe_event_id: event.id,
+      p_event_type: event.type,
+      p_stripe_session_id: session.id,
+      p_user_id: user.id,
+      p_tier: tier,
+      p_stripe_customer_id: session.customer || null,
+      p_stripe_subscription_id: session.subscription || null,
+      p_amount_total: session.amount_total ?? null,
+      p_currency: session.currency || null
+    }), 'Transactional fulfillment failed');
+    // This remains a diagnostic event stream; billing_events is authoritative.
     required(await sb.from('event_logs').insert({
       event_type: 'payment_completed', user_id: user.id,
       metadata: JSON.stringify({ tier, amount: session.amount_total, session_id: session.id, stripe_event_id: event.id }),

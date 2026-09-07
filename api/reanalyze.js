@@ -1,4 +1,5 @@
 const { getModel } = require('./_utils/model');
+const { reserveAnalysis, completeAnalysis, releaseAnalysis, quotaResponse } = require('./_utils/usage');
 var { createClient } = require('@supabase/supabase-js');
 
 // Same system prompt as analyze.js — keep in sync
@@ -85,6 +86,8 @@ module.exports = async function handler(req, res) {
     return res.status(401).json({ error: 'Invalid session' });
   }
   var userId = authResult.data.user.id;
+  var usage = null;
+  var usageCompleted = false;
 
   try {
     var body = req.body || {};
@@ -117,9 +120,6 @@ module.exports = async function handler(req, res) {
     if (tier === 'none' || tier === 'single') {
       // Single users get no reanalysis — they need practitioner
       return res.status(403).json({ error: 'Reanalysis requires a Practitioner or higher subscription.' });
-    }
-    if (tier === 'practitioner' && monthCount >= 50) {
-      return res.status(403).json({ error: 'Monthly analysis limit reached (50/month). Upgrade to Firm for unlimited.' });
     }
 
     // Get all evidence for this case
@@ -169,6 +169,13 @@ module.exports = async function handler(req, res) {
     var evidenceSnapshot = (evidenceList || []).map(function(ev) {
       return { id: ev.id, title: ev.title, type: ev.evidence_type, hash: ev.sha256_hash };
     });
+
+    try {
+      usage = await reserveAnalysis(sb, userId);
+    } catch (quotaError) {
+      var denied = quotaResponse(quotaError);
+      return res.status(denied.status).json(denied.body);
+    }
 
     // Call Anthropic API
     // Use keepalive approach for Vercel timeout
@@ -227,10 +234,14 @@ module.exports = async function handler(req, res) {
     clearInterval(keepaliveTimer);
 
     if (!apiData || (apiData.error && apiData.error.type === 'overloaded_error')) {
+      await releaseAnalysis(sb, userId, usage.reservation_id);
+      usage = null;
       return res.end(JSON.stringify({ error: 'Analysis service temporarily overloaded. Please wait a moment and try again.' }));
     }
 
     if (apiData.error) {
+      await releaseAnalysis(sb, userId, usage.reservation_id);
+      usage = null;
       return res.end(JSON.stringify({ error: 'Analysis service error: ' + (apiData.error.message || 'Unknown') }));
     }
 
@@ -247,6 +258,8 @@ module.exports = async function handler(req, res) {
     try {
       result = JSON.parse(clean);
     } catch (parseErr) {
+      await releaseAnalysis(sb, userId, usage.reservation_id);
+      usage = null;
       return res.end(JSON.stringify({ error: 'Analysis returned malformed data. Please try again.' }));
     }
 
@@ -264,10 +277,9 @@ module.exports = async function handler(req, res) {
       trigger_reason: reason
     }).select().single();
 
-    if (saveErr) console.error('Failed to save analysis:', saveErr);
-
-    // Increment usage
-    await sb.rpc('increment_analysis_count', { p_user_id: userId });
+    if (saveErr) throw new Error('Failed to save analysis: ' + saveErr.message);
+    await completeAnalysis(sb, userId, usage.reservation_id);
+    usageCompleted = true;
 
     // Update case updated_at
     await sb.from('cases').update({ updated_at: new Date().toISOString() })
@@ -284,6 +296,10 @@ module.exports = async function handler(req, res) {
 
   } catch (err) {
     clearInterval(keepaliveTimer);
+    if (usage && !usageCompleted) {
+      try { await releaseAnalysis(sb, userId, usage.reservation_id); }
+      catch (releaseErr) { console.error('Reservation release failed:', releaseErr.message); }
+    }
     console.error('Reanalyze error:', err);
     return res.status(500).json({ error: 'Server error: ' + err.message });
   }

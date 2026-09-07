@@ -1,4 +1,5 @@
 const { getModel } = require('./_utils/model');
+const { reserveAnalysis, completeAnalysis, releaseAnalysis, quotaResponse } = require('./_utils/usage');
 const { createClient } = require('@supabase/supabase-js');
 const verify = require('./_utils/verify');
 
@@ -301,6 +302,10 @@ function checkRateLimit(ip) {
 
 // ===== MAIN HANDLER =====
 module.exports = async function handler(req, res) {
+  let usage = null;
+  let usageClient = null;
+  let usageUserId = null;
+  let usageCompleted = false;
   // CORS — locked to production domain
   const allowedOrigins = ['https://inveritaslaw.com', 'https://www.inveritaslaw.com'];
   const origin = req.headers.origin;
@@ -329,13 +334,13 @@ module.exports = async function handler(req, res) {
   try {
     // ===== AUTH CHECK =====
     let userId = null;
-    let userTier = 'none';
 
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
       const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+      usageClient = supabaseAdmin;
 
       // Verify auth token
       const authHeader = req.headers.authorization;
@@ -351,32 +356,7 @@ module.exports = async function handler(req, res) {
       }
 
       userId = user.id;
-
-      // Check subscription tier and usage
-      const { data: profile } = await supabaseAdmin
-        .from('user_profiles')
-        .select('subscription_tier, analyses_this_month, stripe_customer_id')
-        .eq('user_id', userId)
-        .single();
-
-      if (profile) {
-        userTier = profile.subscription_tier || 'none';
-        const usedThisMonth = profile.analyses_this_month || 0;
-
-        // Enforce limits by tier
-        if (userTier === 'none' && usedThisMonth >= 1) {
-          return res.status(403).json({ error: 'Free analysis used. Subscribe to run more analyses and unlock full results.', upgrade_required: true });
-        }
-        if (userTier === 'single' && usedThisMonth >= 1) {
-          return res.status(403).json({ error: 'Single analysis already used. Purchase another or upgrade to Practitioner.' });
-        }
-        if (userTier === 'practitioner' && usedThisMonth >= 50) {
-          return res.status(403).json({ error: 'Monthly analysis limit reached (50/50). Upgrade to Firm for unlimited.' });
-        }
-      } else {
-        // No profile — allow 1 free analysis (new user)
-        userTier = 'none';
-      }
+      usageUserId = userId;
     } else {
       // Supabase not configured — block in production
       return res.status(500).json({ error: 'Authentication service not configured.' });
@@ -429,6 +409,13 @@ ${safeSituation}
 
 Analyze using the full statutory inversion methodology. Apply all guardrails: calibrated confidence, verified citations only, prerequisite gates, correct suppression vs weight classification, and genuine tier conflicts only. Prioritize accuracy over volume.${statuteInjection}`;
 
+    try {
+      usage = await reserveAnalysis(usageClient, usageUserId);
+    } catch (quotaError) {
+      const denied = quotaResponse(quotaError);
+      return res.status(denied.status).json(denied.body);
+    }
+
     // ===== CALL ANTHROPIC (with retry for overloaded) =====
     const apiBody = JSON.stringify({
       model: getModel(),
@@ -478,6 +465,8 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
     }
 
     if (!data || (data.error && data.error.type === 'overloaded_error')) {
+      await releaseAnalysis(usageClient, usageUserId, usage.reservation_id);
+      usage = null;
       return res.status(503).json({
         error: 'The analysis service is temporarily overloaded. Please wait a moment and try again.'
       });
@@ -485,6 +474,8 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
 
     if (data.error) {
       console.error('Anthropic API error:', data.error);
+      await releaseAnalysis(usageClient, usageUserId, usage.reservation_id);
+      usage = null;
       return res.status(502).json({
         error: 'Analysis service error: ' + (data.error.message || 'Unknown error from API')
       });
@@ -492,6 +483,8 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
 
     if (!data.content || !Array.isArray(data.content)) {
       console.error('Unexpected API response:', JSON.stringify(data).slice(0, 500));
+      await releaseAnalysis(usageClient, usageUserId, usage.reservation_id);
+      usage = null;
       return res.status(502).json({
         error: 'Unexpected response from analysis service. Please try again.'
       });
@@ -755,9 +748,6 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
       try {
         const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-        // Increment usage counter
-        await supabaseAdmin.rpc('increment_analysis_count', { p_user_id: userId });
-
         // Parse the (possibly verification-enriched) result ONCE so we can both
         // save it AND extract the vector count metric.
         let parsedResult = null;
@@ -774,7 +764,7 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
         }
 
         // Log the analysis — full content + metadata for user history and legal audit trail
-        await supabaseAdmin.from('analysis_history').insert({
+        const historyWrite = await supabaseAdmin.from('analysis_history').insert({
           user_id: userId,
           state: safeState,
           county: safeCounty,
@@ -786,14 +776,22 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
           ip_address: ip,
           created_at: new Date().toISOString()
         });
+        if (historyWrite.error) throw new Error('Analysis history write failed: ' + historyWrite.error.message);
       } catch (logErr) {
-        console.error('Analysis logging failed (non-blocking):', logErr.message);
+        throw new Error('Analysis persistence failed: ' + logErr.message);
       }
     }
+
+    await completeAnalysis(usageClient, usageUserId, usage.reservation_id);
+    usageCompleted = true;
 
     return res.status(200).json(data);
 
   } catch (err) {
+    if (usage && !usageCompleted) {
+      try { await releaseAnalysis(usageClient, usageUserId, usage.reservation_id); }
+      catch (releaseErr) { console.error('Reservation release failed:', releaseErr.message); }
+    }
     console.error('Server error:', err);
     return res.status(500).json({ error: 'Server error: ' + err.message });
   }

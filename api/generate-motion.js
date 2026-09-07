@@ -576,9 +576,6 @@ module.exports = async function handler(req, res) {
       verified_citation_count: verifiedCount
     }).select().single();
 
-    // Increment usage
-    await sb.rpc('increment_analysis_count', { p_user_id: userId });
-
     // Audit log
     await sb.from('admin_audit_log').insert({
       admin_user_id: userId,

@@ -7,6 +7,7 @@ const { Readable } = require('node:stream');
 const root = path.join(__dirname, '..');
 const { isOwnedEvidencePath } = require('../api/_utils/storage-path');
 const { fulfillEvent } = require('../api/_utils/fulfillment');
+const { reserveAnalysis, completeAnalysis, releaseAnalysis, quotaResponse } = require('../api/_utils/usage');
 
 function response() { return { code:200, setHeader(){}, status(code){this.code=code;return this;}, json(body){this.body=body;return this;}, end(body){this.body=body;return this;} }; }
 function query(data, error=null) {
@@ -70,13 +71,15 @@ test('checkout handles missing config without initializing Stripe and blocks dup
   const h=handler('create-checkout.js',{'stripe':()=>({checkout:{sessions:{create:async()=>{called=true;}}}}),'@supabase/supabase-js':{createClient:()=>sb}},env),b=response();await h(req('POST',{tier:'firm'}),b);assert.equal(b.code,409);assert.equal(called,false);
 });
 function paidEvent(overrides={}) {return {id:'evt_synthetic',type:'checkout.session.completed',data:{object:{id:'cs_synthetic',payment_status:'paid',metadata:{tier:'single',user_id:'alice'},...overrides}}};}
-test('fulfillment uses the user ID and rejects a failed entitlement write',async()=>{
-  const sb={auth:{admin:{getUserById:async id=>{assert.equal(id,'alice');return {data:{user:{id,email:'a@example.invalid'}}};}}},from:()=>{const q=query(null);q.upsert=()=>query(null,{message:'write failed'});return q;}};
-  await assert.rejects(fulfillEvent(sb,paidEvent()),/Entitlement write failed/);
+test('fulfillment uses an idempotent transactional RPC and rejects its failure',async()=>{
+  let params;
+  const sb={auth:{admin:{getUserById:async id=>{assert.equal(id,'alice');return {data:{user:{id,email:'a@example.invalid'}}};}}},rpc:async(name,p)=>{assert.equal(name,'fulfill_checkout_payment');params=p;return {error:{message:'write failed'}};}};
+  await assert.rejects(fulfillEvent(sb,paidEvent()),/Transactional fulfillment failed/);
+  assert.equal(params.p_user_id,'alice');assert.equal(params.p_stripe_event_id,'evt_synthetic');assert.equal(params.p_stripe_session_id,'cs_synthetic');
 });
 test('legacy checkout lookup paginates and missing users fail instead of acknowledging',async()=>{
   let pages=[];
-  const sb={auth:{admin:{listUsers:async({page})=>{pages.push(page);return {data:{users:page===1?Array.from({length:100},()=>({email:'other@example.invalid'})):[{id:'alice',email:'A@EXAMPLE.INVALID'}]}};}}},from:()=>query(null)};
+  const sb={auth:{admin:{listUsers:async({page})=>{pages.push(page);return {data:{users:page===1?Array.from({length:100},()=>({email:'other@example.invalid'})):[{id:'alice',email:'A@EXAMPLE.INVALID'}]}};}}},rpc:async()=>({data:true}),from:()=>query(null)};
   await fulfillEvent(sb,paidEvent({metadata:{tier:'single'},customer_email:'a@example.invalid'}));assert.deepEqual(pages,[1,2]);
   await assert.rejects(fulfillEvent(sb,paidEvent({metadata:{tier:'single'},customer_email:'missing@example.invalid'})),/reconciliation/);
 });
@@ -89,9 +92,17 @@ test('subscription recovery uses tier metadata and targets subscription ID',asyn
   await fulfillEvent(sb,{type:'customer.subscription.updated',data:{object:{id:'sub_a',status:'active',metadata:{tier:'practitioner'}}}});
   assert.equal(update.subscription_tier,'practitioner');assert.ok(filters.some(([k,v])=>k==='stripe_subscription_id'&&v==='sub_a'));
 });
-test('one-off events never erase an existing subscription',async()=>{
-  const sb={auth:{admin:{getUserById:async()=>({data:{user:{id:'alice'}}})}},from:()=>query({stripe_subscription_id:'sub_existing'})};
-  await assert.rejects(fulfillEvent(sb,paidEvent()),/reconciliation/);
+test('one-off subscription conflicts are surfaced by the transactional database function',async()=>{
+  const sb={auth:{admin:{getUserById:async()=>({data:{user:{id:'alice'}}})}},rpc:async()=>({error:{message:'one-off purchase conflicts with active subscription'}})};
+  await assert.rejects(fulfillEvent(sb,paidEvent()),/conflicts with active subscription/);
+});
+test('usage helpers reserve, complete, release, and map quota failures',async()=>{
+  const calls=[];const sb={rpc:async(name,args)=>{calls.push([name,args]);return name==='reserve_analysis'?{data:[{reservation_id:'r1',reserved_tier:'single'}]}:{data:null};}};
+  const reservation=await reserveAnalysis(sb,'alice');assert.equal(reservation.reservation_id,'r1');
+  await completeAnalysis(sb,'alice','r1');await releaseAnalysis(sb,'alice','r1');
+  assert.deepEqual(calls.map(c=>c[0]),['reserve_analysis','complete_analysis','release_analysis']);
+  assert.equal(quotaResponse(new Error('credit_required')).status,403);
+  await assert.rejects(reserveAnalysis({rpc:async()=>({error:{message:'offline'}})},'alice'),/Unable to reserve/);
 });
 test('webhook rejects bad signatures and retries required fulfillment failure',async()=>{
   for(const badSignature of [true,false]){

@@ -1,5 +1,6 @@
 const { getModel } = require('./_utils/model');
 const { reserveAnalysis, completeAnalysis, releaseAnalysis, quotaResponse } = require('./_utils/usage');
+const { freePreview } = require('./_utils/preview');
 const { createClient } = require('@supabase/supabase-js');
 const verify = require('./_utils/verify');
 
@@ -785,7 +786,7 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
     await completeAnalysis(usageClient, usageUserId, usage.reservation_id);
     usageCompleted = true;
 
-    return res.status(200).json(data);
+    return res.status(200).json(usage.reserved_tier === 'none' ? freePreview(data) : data);
 
   } catch (err) {
     if (usage && !usageCompleted) {

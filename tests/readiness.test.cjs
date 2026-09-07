@@ -8,6 +8,7 @@ const root = path.join(__dirname, '..');
 const { isOwnedEvidencePath } = require('../api/_utils/storage-path');
 const { fulfillEvent } = require('../api/_utils/fulfillment');
 const { reserveAnalysis, completeAnalysis, releaseAnalysis, quotaResponse } = require('../api/_utils/usage');
+const { freePreview } = require('../api/_utils/preview');
 
 function response() { return { code:200, setHeader(){}, status(code){this.code=code;return this;}, json(body){this.body=body;return this;}, end(body){this.body=body;return this;} }; }
 function query(data, error=null) {
@@ -103,6 +104,13 @@ test('usage helpers reserve, complete, release, and map quota failures',async()=
   assert.deepEqual(calls.map(c=>c[0]),['reserve_analysis','complete_analysis','release_analysis']);
   assert.equal(quotaResponse(new Error('credit_required')).status,403);
   await assert.rejects(reserveAnalysis({rpc:async()=>({error:{message:'offline'}})},'alice'),/Unable to reserve/);
+});
+test('free preview omits paid legal arguments and recommendation sections',()=>{
+  const full={content:[{type:'text',text:JSON.stringify({charge_analysis:{offense:'Example'},inversion_vectors:[{title:'Vector',category:'STATUTORY',legal_tier:'STATE',confidence:70,argument:'paid secret',applicable_law:'paid citation'}],recommended_motions:['paid motion'],critical_deadlines:['paid deadline']})}]};
+  const preview=freePreview(full),parsed=JSON.parse(preview.content[0].text);
+  assert.equal(preview.preview_locked,true);assert.equal(parsed.vector_count,1);assert.equal(parsed.inversion_vectors[0].title,'Vector');
+  assert.ok(!JSON.stringify(preview).includes('paid secret'));assert.ok(!JSON.stringify(preview).includes('paid motion'));assert.ok(!JSON.stringify(preview).includes('paid deadline'));
+  assert.equal(JSON.parse(full.content[0].text).recommended_motions[0],'paid motion');
 });
 test('webhook rejects bad signatures and retries required fulfillment failure',async()=>{
   for(const badSignature of [true,false]){

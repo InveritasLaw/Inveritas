@@ -8,8 +8,11 @@ Use a supported Node LTS release. Run `npm ci --ignore-scripts` to install the l
 
 ## Configuration
 
-- `ANTHROPIC_API_KEY`: server-side generation key.
-- `ANTHROPIC_MODEL`: defaults to `claude-sonnet-4-6`. Validate any model change against the legal-output benchmark before deployment.
+- `AI_PROVIDER`: `openai` (default) or `anthropic`.
+- `OPENAI_API_KEY`, `OPENAI_MODEL`: primary generation configuration; the model defaults to benchmark winner `gpt-5.6-sol`.
+- `OPENAI_REASONING_EFFORT`: defaults to `medium` for legal analysis.
+- `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`: optional fallback configuration; the Anthropic model defaults to `claude-sonnet-5`.
+- Run `node scripts/legal-model-benchmark.mjs` before changing the primary model.
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`: server-side database/auth access.
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`: use test-mode values in staging.
 - `APP_ORIGIN`: canonical origin for checkout return URLs; defaults to `https://inveritaslaw.com`. Set to the staging HTTPS origin for staging. No trailing slash.

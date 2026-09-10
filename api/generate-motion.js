@@ -1,4 +1,5 @@
-const { getModel } = require('./_utils/model');
+const { getModel, hasAIConfig } = require('./_utils/model');
+const { callModel } = require('./_utils/ai-client');
 var { createClient } = require('@supabase/supabase-js');
 var verify = require('./_utils/verify');
 
@@ -157,7 +158,6 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  var ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
   var SUPABASE_URL = process.env.SUPABASE_URL;
   var SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -203,8 +203,8 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  if (!ANTHROPIC_KEY) {
-    return res.status(500).json({ error: 'API key not configured' });
+  if (!hasAIConfig()) {
+    return res.status(500).json({ error: 'AI provider is not configured' });
   }
 
   // ===== SUBSCRIPTION CHECK =====
@@ -401,31 +401,19 @@ module.exports = async function handler(req, res) {
     prompt += 'JURISDICTION: ' + (caseData.state || '') + ', ' + (caseData.county || '') + '\n';
     prompt += '\nGenerate a properly formatted ' + motionLabel + ' incorporating the relevant defense vectors and evidence listed above. Follow all UPL-safe formatting rules from your instructions.';
 
-    // ===== CALL ANTHROPIC =====
+    // ===== CALL CONFIGURED AI PROVIDER =====
     // Keepalive for Vercel timeout
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'no-store');
 
     var keepaliveTimer = setInterval(function() { res.write(' '); }, 3000);
 
-    var apiResponse = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: getModel(),
-        max_tokens: 8192,
-        system: GENERATION_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-
-    clearInterval(keepaliveTimer);
-
-    var apiData = await apiResponse.json();
+    var apiData;
+    try {
+      apiData = await callModel({ system: GENERATION_SYSTEM_PROMPT, prompt: prompt, maxTokens: 8192 });
+    } finally {
+      clearInterval(keepaliveTimer);
+    }
 
     if (apiData.error) {
       return res.end(JSON.stringify({ error: 'Generation service error: ' + (apiData.error.message || 'Unknown') }));
@@ -542,7 +530,7 @@ module.exports = async function handler(req, res) {
       citation_report: citationReport,
       requires_acknowledgment: requiresAcknowledgment,
       model_self_tagged: { verified: modelVerifiedTags, unverified: modelUnverifiedTags },
-      model_version: getModel(),
+      model_version: apiData.model || getModel(),
       generated_at: new Date().toISOString(),
       architectural_principles: [
         'refusal_architecture',

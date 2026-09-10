@@ -1,4 +1,5 @@
-const { getModel } = require('./_utils/model');
+const { getModel, hasAIConfig } = require('./_utils/model');
+const { callModel } = require('./_utils/ai-client');
 const { reserveAnalysis, completeAnalysis, releaseAnalysis, quotaResponse } = require('./_utils/usage');
 var { createClient } = require('@supabase/supabase-js');
 
@@ -71,8 +72,7 @@ module.exports = async function handler(req, res) {
 
   var SUPABASE_URL = process.env.SUPABASE_URL;
   var SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  var ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-  if (!SUPABASE_URL || !SUPABASE_KEY || !ANTHROPIC_KEY) {
+  if (!SUPABASE_URL || !SUPABASE_KEY || !hasAIConfig()) {
     return res.status(500).json({ error: 'Server not configured' });
   }
 
@@ -196,34 +196,10 @@ module.exports = async function handler(req, res) {
 
     for (var attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': ANTHROPIC_KEY,
-            'anthropic-version': '2023-06-01'
-          },
-          body: JSON.stringify({
-            model: getModel(),
-            max_tokens: 8192,
-            system: SYSTEM_PROMPT_HEADER,
-            messages: [{ role: 'user', content: userMessage }]
-          })
-        });
-
-        apiData = await response.json();
-
-        if (apiData.error && apiData.error.type === 'overloaded_error') {
-          console.log('Anthropic overloaded, retry ' + (attempt + 1) + '/' + maxRetries);
-          apiData = null;
-          if (attempt < maxRetries - 1) {
-            await new Promise(function(r) { setTimeout(r, retryDelays[attempt]); });
-            continue;
-          }
-        } else {
-          break;
-        }
+        apiData = await callModel({ system: SYSTEM_PROMPT_HEADER, prompt: userMessage, maxTokens: 8192 });
+        break;
       } catch (fetchErr) {
+        if (fetchErr.status && fetchErr.status < 500 && fetchErr.status !== 429) break;
         if (attempt < maxRetries - 1) {
           await new Promise(function(r) { setTimeout(r, retryDelays[attempt]); });
           continue;
@@ -273,7 +249,7 @@ module.exports = async function handler(req, res) {
       situation: situation.slice(0, 5000),
       evidence_snapshot: evidenceSnapshot,
       result: result,
-      model_version: getModel(),
+      model_version: apiData.model || getModel(),
       trigger_reason: reason
     }).select().single();
 

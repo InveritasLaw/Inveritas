@@ -120,17 +120,18 @@ test('webhook rejects bad signatures and retries required fulfillment failure',a
     const res=response();await h(request,res);assert.equal(res.code,badSignature?400:500);
   }
 });
-test('all model request paths use shared configuration and reject the retired model',()=>{
+test('all model request paths use the shared provider adapter and reject retired models',()=>{
   const p=path.join(root,'api/_utils/model.js'),module={exports:{}};
-  vm.runInNewContext(fs.readFileSync(p,'utf8'),{module,process:{env:{ANTHROPIC_MODEL:'claude-sonnet-4-20250514'}}});
+  vm.runInNewContext(fs.readFileSync(p,'utf8'),{module,process:{env:{AI_PROVIDER:'anthropic',ANTHROPIC_MODEL:'claude-sonnet-4-20250514'}}});
   assert.throws(()=>module.exports.getModel(),/retired/);
-  const normal={exports:{}};vm.runInNewContext(fs.readFileSync(p,'utf8'),{module:normal,process:{env:{}}});assert.equal(normal.exports.getModel(),'claude-sonnet-4-6');
-  for(const f of ['analyze','reanalyze','generate-motion','platform']){const s=fs.readFileSync(path.join(root,'api',f+'.js'),'utf8');assert.ok(!s.includes('claude-sonnet-4-20250514'));assert.ok(s.includes('model: getModel()'));}
+  const normal={exports:{}};vm.runInNewContext(fs.readFileSync(p,'utf8'),{module:normal,process:{env:{}}});assert.equal(normal.exports.getModel(),'gpt-5.6-sol');
+  for(const f of ['analyze','reanalyze','generate-motion','platform']){const s=fs.readFileSync(path.join(root,'api',f+'.js'),'utf8');assert.ok(!s.includes('api.anthropic.com'));assert.ok(s.includes('callModel('));}
 });
 
 test('health distinguishes configuration checks from dependency readiness',async()=>{
   for (const configured of [true,false]) {
-    const h=handler('health.js',{},configured?{...env,ANTHROPIC_API_KEY:'fake'}:{}),res=response();
+    const modelMock={getProvider:()=> 'openai',getModel:()=> 'gpt-5.6-sol',hasAIConfig:()=>configured};
+    const h=handler('health.js',{'./_utils/model':modelMock},configured?{...env,OPENAI_API_KEY:'fake'}:{}),res=response();
     await h({},res);
     assert.equal(res.code,configured?200:503);
     assert.equal(res.body.dependencies_tested,false);

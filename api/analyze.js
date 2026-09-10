@@ -1,4 +1,5 @@
-const { getModel } = require('./_utils/model');
+const { getModel, hasAIConfig } = require('./_utils/model');
+const { callModel } = require('./_utils/ai-client');
 const { reserveAnalysis, completeAnalysis, releaseAnalysis, quotaResponse } = require('./_utils/usage');
 const { freePreview } = require('./_utils/preview');
 const { createClient } = require('@supabase/supabase-js');
@@ -327,9 +328,8 @@ module.exports = async function handler(req, res) {
     return res.status(429).json({ error: 'Rate limit exceeded. Maximum 5 analyses per minute.' });
   }
 
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'API key not configured.' });
+  if (!hasAIConfig()) {
+    return res.status(500).json({ error: 'AI provider is not configured.' });
   }
 
   try {
@@ -417,19 +417,7 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
       return res.status(denied.status).json(denied.body);
     }
 
-    // ===== CALL ANTHROPIC (with retry for overloaded) =====
-    const apiBody = JSON.stringify({
-      model: getModel(),
-      max_tokens: 8192,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userMessage }]
-    });
-    const apiHeaders = {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    };
-
+    // ===== CALL CONFIGURED AI PROVIDER (with retry for transient failures) =====
     let data = null;
     let lastError = null;
     const maxRetries = 3;
@@ -437,27 +425,11 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: apiHeaders,
-          body: apiBody
-        });
-        data = await response.json();
-
-        // If overloaded, retry after delay
-        if (data.error && data.error.type === 'overloaded_error') {
-          console.log('Anthropic overloaded, retry ' + (attempt + 1) + '/' + maxRetries);
-          lastError = data.error;
-          data = null;
-          if (attempt < maxRetries - 1) {
-            await new Promise(r => setTimeout(r, retryDelays[attempt]));
-            continue;
-          }
-        } else {
-          break; // Success or non-retryable error
-        }
+        data = await callModel({ system: SYSTEM_PROMPT, prompt: userMessage, maxTokens: 8192 });
+        break;
       } catch (fetchErr) {
-        lastError = { message: fetchErr.message };
+        lastError = { message: fetchErr.message, status: fetchErr.status };
+        if (fetchErr.status && fetchErr.status < 500 && fetchErr.status !== 429) break;
         if (attempt < maxRetries - 1) {
           await new Promise(r => setTimeout(r, retryDelays[attempt]));
           continue;
@@ -465,11 +437,11 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
       }
     }
 
-    if (!data || (data.error && data.error.type === 'overloaded_error')) {
+    if (!data) {
       await releaseAnalysis(usageClient, usageUserId, usage.reservation_id);
       usage = null;
       return res.status(503).json({
-        error: 'The analysis service is temporarily overloaded. Please wait a moment and try again.'
+        error: 'The analysis service is unavailable: ' + (lastError?.message || 'Please try again.')
       });
     }
 
@@ -665,8 +637,7 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
           }
 
           // ENHANCEMENT 5: Dual-model verification (quick second opinion)
-          const ANTHROPIC_KEY_CHECK = process.env.ANTHROPIC_API_KEY;
-          if (ANTHROPIC_KEY_CHECK && parsed.inversion_vectors) {
+          if (hasAIConfig() && parsed.inversion_vectors) {
             try {
               const citationsToCheck = parsed.inversion_vectors
                 .filter(v => v.applicable_law && v.citation_status !== 'VERIFIED — citation confirmed in CourtListener')
@@ -674,18 +645,11 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
                 .slice(0, 10);
 
               if (citationsToCheck.length > 0) {
-                const checkResp = await fetch('https://api.anthropic.com/v1/messages', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY_CHECK, 'anthropic-version': '2023-06-01' },
-                  body: JSON.stringify({
-                    model: getModel(),
-                    max_tokens: 1024,
-                    messages: [{ role: 'user', content: 'For each citation below, respond ONLY with a JSON array. Each item: {"citation":"the citation","real":true/false,"confidence":"high/medium/low"}. If you are not confident a case exists with that exact name and holding, mark real:false.\n\n' + citationsToCheck.join('\n') }]
-                  })
+                const checkData = await callModel({
+                  prompt: 'For each citation below, respond ONLY with a JSON array. Each item: {"citation":"the citation","real":true/false,"confidence":"high/medium/low"}. If you are not confident a case exists with that exact name and holding, mark real:false.\n\n' + citationsToCheck.join('\n'),
+                  maxTokens: 1024
                 });
-
-                if (checkResp.ok) {
-                  const checkData = await checkResp.json();
+                if (checkData) {
                   const checkText = (checkData.content || []).map(c => c.text || '').join('');
                   try {
                     const checkResults = JSON.parse(checkText.replace(/```json|```/g, '').trim());

@@ -1,4 +1,5 @@
-const { getModel } = require('./_utils/model');
+const { hasAIConfig } = require('./_utils/model');
+const { callModel } = require('./_utils/ai-client');
 var { createClient } = require('@supabase/supabase-js');
 
 // =====================================================================
@@ -91,7 +92,6 @@ module.exports = async function handler(req, res) {
 
   var SUPABASE_URL = process.env.SUPABASE_URL;
   var SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  var ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
   var CL_TOKEN = process.env.COURTLISTENER_API_TOKEN;
   if (!SUPABASE_URL || !SUPABASE_KEY) return res.status(500).json({ error: 'Not configured' });
 
@@ -208,7 +208,7 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ results: data || [] });
       }
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
-      if (!ANTHROPIC_KEY) return res.status(500).json({ error: 'API key not configured' });
+      if (!hasAIConfig()) return res.status(500).json({ error: 'AI provider is not configured' });
 
       var body = req.body;
       var toolType = body.tool_type;
@@ -243,12 +243,7 @@ module.exports = async function handler(req, res) {
       }
       if (body.additional_input) prompt += '\nAdditional: ' + sanitize(body.additional_input, 5000) + '\n';
 
-      var apiResp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: getModel(), max_tokens: 4096, system: tool.system, messages: [{ role: 'user', content: prompt }] })
-      });
-      var apiData = await apiResp.json();
+      var apiData = await callModel({ system: tool.system, prompt: prompt, maxTokens: 4096 });
       if (apiData.error) return res.status(502).json({ error: 'Service error: ' + (apiData.error.message || 'Unknown') });
 
       var txt = ''; if (apiData.content) apiData.content.forEach(function(c) { if (c.type === 'text') txt += c.text; });
@@ -290,7 +285,7 @@ module.exports = async function handler(req, res) {
 
         // Auto-extract from analysis
         if (body.extract) {
-          if (!ANTHROPIC_KEY) return res.status(500).json({ error: 'API key not configured' });
+          if (!hasAIConfig()) return res.status(500).json({ error: 'AI provider is not configured' });
           var aR = await sb.from('case_analyses').select('id, result').eq('case_id', body.case_id).eq('user_id', userId).order('version', { ascending: false }).limit(1).single();
           if (!aR.data) return res.status(404).json({ error: 'No analysis found' });
           var cR = await sb.from('cases').select('state,county,charge').eq('id', body.case_id).eq('user_id', userId).single();
@@ -301,8 +296,7 @@ module.exports = async function handler(req, res) {
           if (aR.data.result && aR.data.result.critical_warnings) p += 'Warnings: ' + aR.data.result.critical_warnings.join('; ') + '\n';
           p += '\nReturn ONLY valid JSON array: [{"deadline_type":"speedy_trial|statute_of_limitations|motion_filing|discovery|appeal|arraignment|pretrial|trial|response_due","title":"title","description":"explanation","days_from_charge":number,"jurisdiction_note":"source"}]';
 
-          var dResp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' }, body: JSON.stringify({ model: getModel(), max_tokens: 2048, messages: [{ role: 'user', content: p }] }) });
-          var dData = await dResp.json();
+          var dData = await callModel({ prompt: p, maxTokens: 2048 });
           var dTxt = ''; if (dData.content) dData.content.forEach(function(c) { if (c.type === 'text') dTxt += c.text; });
           var deadlines = []; try { deadlines = JSON.parse(dTxt.replace(/```json|```/g, '').trim()); } catch (e) { deadlines = []; }
 

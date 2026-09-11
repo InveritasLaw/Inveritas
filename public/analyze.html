@@ -524,9 +524,22 @@ async function runAnalysis() {
     headers,
     body: JSON.stringify({ state, county, charge, situation })
   })
-  .then(r => {
-    if (!r.ok) return r.json().then(err => { throw new Error(err.error || 'Server returned ' + r.status); });
-    return r.json();
+  .then(async r => {
+    const contentType = r.headers.get('content-type') || '';
+    const raw = await r.text();
+    let data = null;
+    if (contentType.includes('application/json') || raw.trim().startsWith('{')) {
+      try { data = JSON.parse(raw); }
+      catch (parseErr) { throw new Error('The analysis service returned malformed JSON. Please retry.'); }
+    }
+    if (!data) {
+      const gatewayFailure = r.status === 502 || r.status === 503 || r.status === 504 || raw.trim().startsWith('<');
+      throw new Error(gatewayFailure
+        ? 'The analysis request timed out at the hosting gateway. Please retry.'
+        : 'The analysis service returned an unexpected response (HTTP ' + r.status + ').');
+    }
+    if (!r.ok) throw new Error(data.error || 'Server returned ' + r.status);
+    return data;
   })
   .then(data => {
     clearInterval(loadingInterval);

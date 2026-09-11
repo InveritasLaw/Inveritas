@@ -12,6 +12,8 @@ Use a supported Node LTS release. Run `npm ci --ignore-scripts` to install the l
 - `OPENAI_API_KEY`, `OPENAI_MODEL`: primary generation configuration; the model defaults to benchmark winner `gpt-5.6-sol`.
 - `OPENAI_REASONING_EFFORT`: defaults to `medium` for legal analysis.
 - `AI_FALLBACK_PROVIDER`: optional explicit fallback (`openai` or `anthropic`). It is disabled by default so a legacy provider key cannot silently receive production traffic.
+- `AI_REQUEST_TIMEOUT_MS`: per-provider timeout, bounded to 5-50 seconds and defaulting to 45 seconds so API errors remain JSON within Vercel's 60-second function limit.
+- `ENABLE_DUAL_MODEL_VERIFICATION`: set to `true` only when the deployment has enough execution time for a second model request. Disabled by default.
 - `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`: optional Anthropic configuration used only when Anthropic is the primary provider or is explicitly selected by `AI_FALLBACK_PROVIDER`.
 - Run `node scripts/legal-model-benchmark.mjs` before changing the primary model.
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`: server-side database/auth access.

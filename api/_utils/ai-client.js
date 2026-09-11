@@ -10,11 +10,15 @@ function textFromOpenAI(body) {
 
 async function requestProvider(provider, { system, prompt, maxTokens }) {
   const model = modelFor(provider);
+  const configuredTimeout = Number.parseInt(process.env.AI_REQUEST_TIMEOUT_MS || '45000', 10);
+  const timeoutMs = Number.isFinite(configuredTimeout)
+    ? Math.min(Math.max(configuredTimeout, 5000), 50000)
+    : 45000;
   let response;
   if (provider === 'openai') {
     if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is not configured');
     response = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST', signal: AbortSignal.timeout(55000),
+      method: 'POST', signal: AbortSignal.timeout(timeoutMs),
       headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model,
@@ -29,7 +33,7 @@ async function requestProvider(provider, { system, prompt, maxTokens }) {
   } else {
     if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is not configured');
     response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', signal: AbortSignal.timeout(55000),
+      method: 'POST', signal: AbortSignal.timeout(timeoutMs),
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({ model, max_tokens: maxTokens, ...(system ? { system } : {}), messages: [{ role: 'user', content: prompt }] })
     });

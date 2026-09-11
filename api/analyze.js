@@ -420,8 +420,11 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
     // ===== CALL CONFIGURED AI PROVIDER (with retry for transient failures) =====
     let data = null;
     let lastError = null;
-    const maxRetries = 3;
-    const retryDelays = [2000, 5000, 10000]; // 2s, 5s, 10s
+    // A Vercel invocation has a 60-second ceiling. Retrying a potentially
+    // 45-second model call here causes the platform to return an HTML timeout
+    // page before this handler can release the reservation or return JSON.
+    const maxRetries = 1;
+    const retryDelays = [];
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
@@ -637,7 +640,7 @@ Analyze using the full statutory inversion methodology. Apply all guardrails: ca
           }
 
           // ENHANCEMENT 5: Dual-model verification (quick second opinion)
-          if (hasAIConfig() && parsed.inversion_vectors) {
+          if (process.env.ENABLE_DUAL_MODEL_VERIFICATION === 'true' && hasAIConfig() && parsed.inversion_vectors) {
             try {
               const citationsToCheck = parsed.inversion_vectors
                 .filter(v => v.applicable_law && v.citation_status !== 'VERIFIED — citation confirmed in CourtListener')

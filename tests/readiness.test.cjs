@@ -126,6 +126,9 @@ test('all model request paths use the shared provider adapter and reject retired
   assert.throws(()=>module.exports.getModel(),/retired/);
   const normal={exports:{}};vm.runInNewContext(fs.readFileSync(p,'utf8'),{module:normal,process:{env:{}}});assert.equal(normal.exports.getModel(),'gpt-5.6-sol');
   for(const f of ['analyze','reanalyze','generate-motion','platform']){const s=fs.readFileSync(path.join(root,'api',f+'.js'),'utf8');assert.ok(!s.includes('api.anthropic.com'));assert.ok(s.includes('callModel('));}
+  const client=fs.readFileSync(path.join(root,'api','_utils','ai-client.js'),'utf8');
+  assert.ok(client.includes("process.env.AI_FALLBACK_PROVIDER || ''"));
+  assert.ok(!client.includes("const fallback = primary === 'openai'"));
 });
 
 test('health distinguishes configuration checks from dependency readiness',async()=>{

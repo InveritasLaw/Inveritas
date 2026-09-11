@@ -11,7 +11,8 @@ Use a supported Node LTS release. Run `npm ci --ignore-scripts` to install the l
 - `AI_PROVIDER`: `openai` (default) or `anthropic`.
 - `OPENAI_API_KEY`, `OPENAI_MODEL`: primary generation configuration; the model defaults to benchmark winner `gpt-5.6-sol`.
 - `OPENAI_REASONING_EFFORT`: defaults to `medium` for legal analysis.
-- `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`: optional fallback configuration; the Anthropic model defaults to `claude-sonnet-5`.
+- `AI_FALLBACK_PROVIDER`: optional explicit fallback (`openai` or `anthropic`). It is disabled by default so a legacy provider key cannot silently receive production traffic.
+- `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`: optional Anthropic configuration used only when Anthropic is the primary provider or is explicitly selected by `AI_FALLBACK_PROVIDER`.
 - Run `node scripts/legal-model-benchmark.mjs` before changing the primary model.
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`: server-side database/auth access.
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`: use test-mode values in staging.

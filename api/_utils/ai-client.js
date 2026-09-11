@@ -51,12 +51,26 @@ async function callModel(options) {
   try {
     return await requestProvider(primary, options);
   } catch (primaryError) {
-    const fallback = primary === 'openai' ? 'anthropic' : 'openai';
+    // Fallback is deliberately opt-in. A configured legacy provider key must
+    // not silently route production traffic away from the selected provider.
+    const fallback = (process.env.AI_FALLBACK_PROVIDER || '').toLowerCase();
+    if (!fallback) throw primaryError;
+    if (!['openai', 'anthropic'].includes(fallback) || fallback === primary) {
+      console.error('Ignoring invalid AI_FALLBACK_PROVIDER configuration');
+      throw primaryError;
+    }
     const fallbackConfigured = fallback === 'openai' ? process.env.OPENAI_API_KEY : process.env.ANTHROPIC_API_KEY;
     const transient = !primaryError.status || primaryError.status === 408 || primaryError.status === 429 || primaryError.status >= 500;
     if (!fallbackConfigured || !transient) throw primaryError;
     console.error(`${primary} model failed; using configured ${fallback} fallback:`, primaryError.message);
-    return requestProvider(fallback, options);
+    try {
+      return await requestProvider(fallback, options);
+    } catch (fallbackError) {
+      console.error(`${fallback} fallback also failed:`, fallbackError.message);
+      primaryError.fallbackProvider = fallback;
+      primaryError.fallbackStatus = fallbackError.status || null;
+      throw primaryError;
+    }
   }
 }
 

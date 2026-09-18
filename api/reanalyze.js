@@ -61,7 +61,7 @@ var SYSTEM_PROMPT_HEADER = 'You are a precision legal defense analyst specializi
 '  "critical_warnings": ["each warning as a plain string"]\n' +
 '}\n\n' +
 'CRITICAL: Every item in tier_conflict_opportunities, statutory_escape_hatches, prosecution_weaknesses, recommended_motions, critical_deadlines, critical_warnings, and evidence_priorities MUST be a plain string, NOT an object. Only inversion_vectors should be objects.\n\n' +
-'Accuracy over volume. Five real vectors at calibrated confidence are worth more than ten inflated ones.';
+'Accuracy over volume. Return no more than 3 inversion_vectors. Keep every field concise so the complete JSON response fits within 1,200 output tokens.';
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://inveritaslaw.com');
@@ -189,7 +189,7 @@ module.exports = async function handler(req, res) {
       apiData = await callModel({
         system: SYSTEM_PROMPT_HEADER,
         prompt: userMessage,
-        maxTokens: 2000,
+        maxTokens: 1200,
         reasoningEffort: 'low',
         modelOverride: process.env.OPENAI_REANALYSIS_MODEL || 'gpt-5.6-terra'
       });

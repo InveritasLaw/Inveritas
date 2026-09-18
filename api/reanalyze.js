@@ -16,22 +16,14 @@ Rules:
 
 Return this JSON shape:
 {
-  "charge_analysis": {"offense":"string","jurisdiction":"string","county_or_city":"string","governing_statute":"string","severity_class":"string","elements_required":["string"],"mens_rea":"string","court_type":"string","potential_penalties":"string"},
-  "jurisdiction_analysis": {
-    "federal_provisions":{"constitutional_issues":["string"],"federal_statutes":["string"],"supreme_court_precedent":["string"]},
-    "state_provisions":{"state_code_sections":["string"],"state_case_law":["string"],"state_procedure_rules":["string"]},
-    "municipal_provisions":{"local_ordinances":["string"],"municipal_procedures":["string"],"penalty_schedule_differences":["string"]}
-  },
-  "tier_conflict_opportunities":["string"],
+  "charge_analysis": {"offense":"string","governing_statute":"string","severity_class":"string","elements_required":["string"]},
   "inversion_vectors":[{"category":"string","legal_tier":"string","title":"string","motion_type":"string","argument":"string","applicable_law":"string","prerequisites":["string"],"confidence":0}],
   "evidence_priorities":["string"],
-  "statutory_escape_hatches":["string"],
   "prosecution_weaknesses":["string"],
   "recommended_motions":["string"],
-  "critical_deadlines":["string"],
   "critical_warnings":["string"]
 }
-Keep the complete JSON under 900 output tokens.`;
+Keep the complete JSON under 1,200 output tokens.`;
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://inveritaslaw.com');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -158,7 +150,7 @@ module.exports = async function handler(req, res) {
       apiData = await callModel({
         system: SYSTEM_PROMPT_HEADER,
         prompt: userMessage,
-        maxTokens: 900,
+        maxTokens: 1200,
         reasoningEffort: 'low',
         modelOverride: process.env.OPENAI_REANALYSIS_MODEL || 'gpt-5.6-terra'
       });
@@ -198,7 +190,8 @@ module.exports = async function handler(req, res) {
     } catch (parseErr) {
       await releaseAnalysis(sb, userId, usage.reservation_id);
       usage = null;
-      return res.status(502).json({ error: 'Analysis returned malformed data. Please try again.' });
+      console.error('Reanalysis JSON parse failed:', clean.slice(0, 300));
+      return res.status(422).json({ error: 'The model returned incomplete analysis data. Please retry.' });
     }
 
     // Save analysis to case_analyses

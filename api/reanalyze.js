@@ -189,20 +189,22 @@ module.exports = async function handler(req, res) {
       apiData = await callModel({
         system: SYSTEM_PROMPT_HEADER,
         prompt: userMessage,
-        maxTokens: 3000,
+        maxTokens: 2000,
         reasoningEffort: 'low',
         modelOverride: process.env.OPENAI_REANALYSIS_MODEL || 'gpt-5.6-terra'
       });
     } catch (fetchErr) {
       modelError = fetchErr;
-      console.error('Reanalysis model call failed:', fetchErr.message);
+      console.error('Reanalysis model call failed:', fetchErr.model || 'unknown-model', fetchErr.message);
     }
 
     if (!apiData || (apiData.error && apiData.error.type === 'overloaded_error')) {
       await releaseAnalysis(sb, userId, usage.reservation_id);
       usage = null;
       return res.status(503).json({
-        error: 'The analysis service is unavailable: ' + (modelError && modelError.message ? modelError.message : 'Please try again.')
+        error: 'The analysis service is unavailable' +
+          (modelError && modelError.model ? ' (' + modelError.model + ')' : '') + ': ' +
+          (modelError && modelError.message ? modelError.message : 'Please try again.')
       });
     }
 

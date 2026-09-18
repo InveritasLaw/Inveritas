@@ -57,6 +57,7 @@ async function callModel(options) {
   try {
     return await requestProvider(primary, options);
   } catch (primaryError) {
+    primaryError.model = options.modelOverride || modelFor(primary);
     // Fallback is deliberately opt-in. A configured legacy provider key must
     // not silently route production traffic away from the selected provider.
     const fallback = (process.env.AI_FALLBACK_PROVIDER || '').toLowerCase();

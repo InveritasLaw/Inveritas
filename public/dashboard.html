@@ -917,8 +917,19 @@ async function reanalyzeCase() {
       })
     });
     var text = await r.text();
-    var data = JSON.parse(text.trim());
-    if (data.error) throw new Error(data.error);
+    var trimmed = text.trim();
+    var data = null;
+    if (trimmed && ((r.headers.get('content-type') || '').includes('application/json') || trimmed.charAt(0) === '{')) {
+      try { data = JSON.parse(trimmed); }
+      catch (parseErr) { throw new Error('The analysis service returned malformed JSON. Please retry.'); }
+    }
+    if (!data) {
+      var gatewayFailure = r.status === 502 || r.status === 503 || r.status === 504 || trimmed.charAt(0) === '<' || !trimmed;
+      throw new Error(gatewayFailure
+        ? 'The analysis request ended at the hosting gateway before a result was returned. Please retry.'
+        : 'The analysis service returned an unexpected response (HTTP ' + r.status + ').');
+    }
+    if (!r.ok || data.error) throw new Error(data.error || 'Server returned HTTP ' + r.status);
 
     showToast('Analysis complete! Version ' + data.version + ' — ' + (data.analysis.inversion_vectors || []).length + ' vectors found');
     openCase(currentCaseId); // Refresh

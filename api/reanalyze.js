@@ -177,48 +177,33 @@ module.exports = async function handler(req, res) {
       return res.status(denied.status).json(denied.body);
     }
 
-    // Call Anthropic API
-    // Use keepalive approach for Vercel timeout
-    var keepaliveTimer;
-    var headersSent = false;
-
+    // Keep the provider call inside Vercel's 60-second function ceiling. Do
+    // not stream whitespace as a keepalive: that commits a partial response
+    // and leaves the browser with an empty/truncated JSON body if the gateway
+    // terminates the invocation.
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'no-store');
-
-    keepaliveTimer = setInterval(function() {
-      if (!headersSent) { res.write(' '); }
-    }, 3000);
-
-    var response = null;
     var apiData = null;
-    var maxRetries = 3;
-    var retryDelays = [2000, 5000, 10000];
-
-    for (var attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        apiData = await callModel({ system: SYSTEM_PROMPT_HEADER, prompt: userMessage, maxTokens: 8192 });
-        break;
-      } catch (fetchErr) {
-        if (fetchErr.status && fetchErr.status < 500 && fetchErr.status !== 429) break;
-        if (attempt < maxRetries - 1) {
-          await new Promise(function(r) { setTimeout(r, retryDelays[attempt]); });
-          continue;
-        }
-      }
+    var modelError = null;
+    try {
+      apiData = await callModel({ system: SYSTEM_PROMPT_HEADER, prompt: userMessage, maxTokens: 4096 });
+    } catch (fetchErr) {
+      modelError = fetchErr;
+      console.error('Reanalysis model call failed:', fetchErr.message);
     }
-
-    clearInterval(keepaliveTimer);
 
     if (!apiData || (apiData.error && apiData.error.type === 'overloaded_error')) {
       await releaseAnalysis(sb, userId, usage.reservation_id);
       usage = null;
-      return res.end(JSON.stringify({ error: 'Analysis service temporarily overloaded. Please wait a moment and try again.' }));
+      return res.status(503).json({
+        error: 'The analysis service is unavailable: ' + (modelError && modelError.message ? modelError.message : 'Please try again.')
+      });
     }
 
     if (apiData.error) {
       await releaseAnalysis(sb, userId, usage.reservation_id);
       usage = null;
-      return res.end(JSON.stringify({ error: 'Analysis service error: ' + (apiData.error.message || 'Unknown') }));
+      return res.status(502).json({ error: 'Analysis service error: ' + (apiData.error.message || 'Unknown') });
     }
 
     // Parse the result
@@ -236,7 +221,7 @@ module.exports = async function handler(req, res) {
     } catch (parseErr) {
       await releaseAnalysis(sb, userId, usage.reservation_id);
       usage = null;
-      return res.end(JSON.stringify({ error: 'Analysis returned malformed data. Please try again.' }));
+      return res.status(502).json({ error: 'Analysis returned malformed data. Please try again.' });
     }
 
     // Save analysis to case_analyses
@@ -261,17 +246,15 @@ module.exports = async function handler(req, res) {
     await sb.from('cases').update({ updated_at: new Date().toISOString() })
       .eq('id', caseId);
 
-    headersSent = true;
-    return res.end(JSON.stringify({
+    return res.status(200).json({
       analysis: result,
       version: savedAnalysis ? savedAnalysis.version : 1,
       analysis_id: savedAnalysis ? savedAnalysis.id : null,
       evidence_count: evidenceList ? evidenceList.length : 0,
       trigger_reason: reason
-    }));
+    });
 
   } catch (err) {
-    clearInterval(keepaliveTimer);
     if (usage && !usageCompleted) {
       try { await releaseAnalysis(sb, userId, usage.reservation_id); }
       catch (releaseErr) { console.error('Reservation release failed:', releaseErr.message); }

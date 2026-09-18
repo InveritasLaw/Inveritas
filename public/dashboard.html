@@ -902,7 +902,6 @@ async function addEvidence() {
 // ===== REANALYZE =====
 async function reanalyzeCase() {
   if (!currentCaseId) return;
-  var context = prompt('Add any additional context for this reanalysis (or leave blank):');
 
   showToast('Running analysis... this may take 30-60 seconds');
 
@@ -913,7 +912,7 @@ async function reanalyzeCase() {
       body: JSON.stringify({
         case_id: currentCaseId,
         reason: 'manual_rerun',
-        additional_context: context || ''
+        additional_context: ''
       })
     });
     var text = await r.text();

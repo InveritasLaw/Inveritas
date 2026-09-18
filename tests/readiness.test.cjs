@@ -151,4 +151,5 @@ test('reanalysis returns atomic JSON within the hosting timeout',()=>{
   assert.ok(api.includes("reasoningEffort: 'low'"),'reanalyze must use bounded reasoning effort');
   assert.ok(api.includes('return res.status(200).json({'),'reanalyze success must use an atomic JSON response');
   assert.ok(dashboard.includes('hosting gateway before a result was returned'),'dashboard must explain gateway termination');
+  assert.ok(!dashboard.includes("prompt('Add any additional context"),'reanalysis must not block submission on a browser prompt');
 });

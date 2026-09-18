@@ -24,6 +24,23 @@ Return this JSON shape:
   "critical_warnings":["string"]
 }
 Keep the complete JSON under 1,200 output tokens.`;
+var STRING_ARRAY = { type: 'array', items: { type: 'string' } };
+var REANALYSIS_SCHEMA = {
+  type: 'object', additionalProperties: false,
+  properties: {
+    charge_analysis: { type: 'object', additionalProperties: false, properties: {
+      offense: { type: 'string' }, governing_statute: { type: 'string' }, severity_class: { type: 'string' }, elements_required: STRING_ARRAY
+    }, required: ['offense', 'governing_statute', 'severity_class', 'elements_required'] },
+    inversion_vectors: { type: 'array', maxItems: 3, items: { type: 'object', additionalProperties: false, properties: {
+      category: { type: 'string' }, legal_tier: { type: 'string' }, title: { type: 'string' }, motion_type: { type: 'string' },
+      argument: { type: 'string' }, applicable_law: { type: 'string' }, prerequisites: STRING_ARRAY,
+      confidence: { type: 'integer', minimum: 0, maximum: 100 }
+    }, required: ['category', 'legal_tier', 'title', 'motion_type', 'argument', 'applicable_law', 'prerequisites', 'confidence'] } },
+    evidence_priorities: STRING_ARRAY, prosecution_weaknesses: STRING_ARRAY,
+    recommended_motions: STRING_ARRAY, critical_warnings: STRING_ARRAY
+  },
+  required: ['charge_analysis', 'inversion_vectors', 'evidence_priorities', 'prosecution_weaknesses', 'recommended_motions', 'critical_warnings']
+};
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://inveritaslaw.com');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -150,9 +167,10 @@ module.exports = async function handler(req, res) {
       apiData = await callModel({
         system: SYSTEM_PROMPT_HEADER,
         prompt: userMessage,
-        maxTokens: 1200,
+        maxTokens: 1800,
         reasoningEffort: 'low',
-        modelOverride: process.env.OPENAI_REANALYSIS_MODEL || 'gpt-5.6-terra'
+        modelOverride: process.env.OPENAI_REANALYSIS_MODEL || 'gpt-5.6-terra',
+        jsonSchema: REANALYSIS_SCHEMA
       });
     } catch (fetchErr) {
       modelError = fetchErr;

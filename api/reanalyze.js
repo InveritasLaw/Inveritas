@@ -4,65 +4,34 @@ const { reserveAnalysis, completeAnalysis, releaseAnalysis, quotaResponse } = re
 var { createClient } = require('@supabase/supabase-js');
 
 // Same system prompt as analyze.js — keep in sync
-var SYSTEM_PROMPT_HEADER = 'You are a precision legal defense analyst specializing in STATUTORY INVERSION across three tiers of American law: Federal, State, and County/Municipal.\n\n' +
-'RULES:\n' +
-'1. NEVER fabricate case citations. If uncertain, describe the principle and note "citation should be verified."\n' +
-'2. NEVER invent statute numbers. If uncertain, state the principle and flag "verify exact code section."\n' +
-'3. Confidence scores must be calibrated: 80-100 only for textbook arguments, 50-79 for strong but fact-dependent, 20-49 for viable but challenging, below 20 for longshots.\n' +
-'4. All items in arrays must be PLAIN STRINGS, not objects.\n\n' +
-'Return ONLY valid JSON (no markdown, no backticks, no preamble):\n' +
-'{\n' +
-'  "charge_analysis": {\n' +
-'    "offense": "specific charge",\n' +
-'    "jurisdiction": "State/Federal/Municipal",\n' +
-'    "county_or_city": "county or city",\n' +
-'    "governing_statute": "primary statute",\n' +
-'    "severity_class": "Felony/Misdemeanor/Infraction",\n' +
-'    "elements_required": ["each element as a plain string"],\n' +
-'    "mens_rea": "mental state required",\n' +
-'    "court_type": "court type",\n' +
-'    "potential_penalties": "sentencing range"\n' +
-'  },\n' +
-'  "jurisdiction_analysis": {\n' +
-'    "federal_provisions": {\n' +
-'      "constitutional_issues": ["plain string items"],\n' +
-'      "federal_statutes": ["plain string items"],\n' +
-'      "supreme_court_precedent": ["plain string items"]\n' +
-'    },\n' +
-'    "state_provisions": {\n' +
-'      "state_code_sections": ["plain string items"],\n' +
-'      "state_case_law": ["plain string items"],\n' +
-'      "state_procedure_rules": ["plain string items"]\n' +
-'    },\n' +
-'    "municipal_provisions": {\n' +
-'      "local_ordinances": ["plain string items"],\n' +
-'      "municipal_procedures": ["plain string items"],\n' +
-'      "penalty_schedule_differences": ["plain string items"]\n' +
-'    }\n' +
-'  },\n' +
-'  "tier_conflict_opportunities": ["each conflict as a plain string describing the conflict"],\n' +
-'  "inversion_vectors": [\n' +
-'    {\n' +
-'      "category": "CONSTITUTIONAL|DEFINITIONAL|PROCEDURAL|EVIDENTIARY|TIER_CONFLICT|STATUTORY",\n' +
-'      "legal_tier": "FEDERAL|STATE|MUNICIPAL|CROSS-TIER",\n' +
-'      "title": "concise descriptive title",\n' +
-'      "motion_type": "SUPPRESSION|WEIGHT|BOTH|DISMISSAL|PROCEDURAL",\n' +
-'      "argument": "detailed legal argument as a string",\n' +
-'      "applicable_law": "specific citation",\n' +
-'      "prerequisites": ["plain string conditions"],\n' +
-'      "confidence": 0-100\n' +
-'    }\n' +
-'  ],\n' +
-'  "evidence_priorities": ["plain string items ranked by importance"],\n' +
-'  "statutory_escape_hatches": ["each escape hatch as a plain string"],\n' +
-'  "prosecution_weaknesses": ["each weakness as a plain string"],\n' +
-'  "recommended_motions": ["each motion as a plain string"],\n' +
-'  "critical_deadlines": ["each deadline as a plain string"],\n' +
-'  "critical_warnings": ["each warning as a plain string"]\n' +
-'}\n\n' +
-'CRITICAL: Every item in tier_conflict_opportunities, statutory_escape_hatches, prosecution_weaknesses, recommended_motions, critical_deadlines, critical_warnings, and evidence_priorities MUST be a plain string, NOT an object. Only inversion_vectors should be objects.\n\n' +
-'Accuracy over volume. Return no more than 3 inversion_vectors. Keep every field concise so the complete JSON response fits within 1,200 output tokens.';
+var SYSTEM_PROMPT_HEADER = `You are a precise legal defense analyst. Analyze only the supplied facts and jurisdiction. Return ONLY valid JSON, without markdown.
 
+Rules:
+- Never invent facts, cases, statutes, deadlines, or outcomes. Mark uncertain authority "VERIFY CITATION" or "VERIFY EXACT SECTION".
+- Separate admissibility or suppression issues from weight or credibility arguments.
+- State unknown prerequisites explicitly and cap confidence at 50.
+- Lack of injury is not automatically a defense; identify the charged subsection and its actual elements.
+- Use at most 3 concise defense vectors. Prefer evidence preservation, element disputes, and realistic motions.
+- This is legal research, not legal advice.
+
+Return this JSON shape:
+{
+  "charge_analysis": {"offense":"string","jurisdiction":"string","county_or_city":"string","governing_statute":"string","severity_class":"string","elements_required":["string"],"mens_rea":"string","court_type":"string","potential_penalties":"string"},
+  "jurisdiction_analysis": {
+    "federal_provisions":{"constitutional_issues":["string"],"federal_statutes":["string"],"supreme_court_precedent":["string"]},
+    "state_provisions":{"state_code_sections":["string"],"state_case_law":["string"],"state_procedure_rules":["string"]},
+    "municipal_provisions":{"local_ordinances":["string"],"municipal_procedures":["string"],"penalty_schedule_differences":["string"]}
+  },
+  "tier_conflict_opportunities":["string"],
+  "inversion_vectors":[{"category":"string","legal_tier":"string","title":"string","motion_type":"string","argument":"string","applicable_law":"string","prerequisites":["string"],"confidence":0}],
+  "evidence_priorities":["string"],
+  "statutory_escape_hatches":["string"],
+  "prosecution_weaknesses":["string"],
+  "recommended_motions":["string"],
+  "critical_deadlines":["string"],
+  "critical_warnings":["string"]
+}
+Keep the complete JSON under 900 output tokens.`;
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://inveritaslaw.com');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -189,7 +158,7 @@ module.exports = async function handler(req, res) {
       apiData = await callModel({
         system: SYSTEM_PROMPT_HEADER,
         prompt: userMessage,
-        maxTokens: 1200,
+        maxTokens: 900,
         reasoningEffort: 'low',
         modelOverride: process.env.OPENAI_REANALYSIS_MODEL || 'gpt-5.6-terra'
       });

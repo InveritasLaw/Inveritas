@@ -147,7 +147,8 @@ test('reanalysis returns atomic JSON within the hosting timeout',()=>{
   const dashboard=fs.readFileSync(path.join(root,'public','dashboard.html'),'utf8');
   assert.ok(!api.includes("res.write(' ')"),'reanalyze must not commit partial whitespace responses');
   assert.ok(!api.includes('setInterval(function()'),'reanalyze must not use response keepalive timers');
-  assert.ok(api.includes('maxTokens: 4096'),'reanalyze output must be bounded for the 60-second function');
+  assert.ok(api.includes('maxTokens: 3000'),'reanalyze output must be bounded for the 60-second function');
+  assert.ok(api.includes("reasoningEffort: 'low'"),'reanalyze must use bounded reasoning effort');
   assert.ok(api.includes('return res.status(200).json({'),'reanalyze success must use an atomic JSON response');
   assert.ok(dashboard.includes('hosting gateway before a result was returned'),'dashboard must explain gateway termination');
 });

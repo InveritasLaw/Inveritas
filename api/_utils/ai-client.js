@@ -8,7 +8,7 @@ function textFromOpenAI(body) {
     .filter(item => item.type === 'output_text').map(item => item.text || '').join('');
 }
 
-async function requestProvider(provider, { system, prompt, maxTokens }) {
+async function requestProvider(provider, { system, prompt, maxTokens, reasoningEffort }) {
   const model = modelFor(provider);
   const configuredTimeout = Number.parseInt(process.env.AI_REQUEST_TIMEOUT_MS || '45000', 10);
   const timeoutMs = Number.isFinite(configuredTimeout)
@@ -22,7 +22,7 @@ async function requestProvider(provider, { system, prompt, maxTokens }) {
       headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model,
-        reasoning: { effort: process.env.OPENAI_REASONING_EFFORT || 'medium' },
+        reasoning: { effort: reasoningEffort || process.env.OPENAI_REASONING_EFFORT || 'medium' },
         input: [
           ...(system ? [{ role: 'system', content: system }] : []),
           { role: 'user', content: prompt }

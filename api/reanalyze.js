@@ -186,7 +186,12 @@ module.exports = async function handler(req, res) {
     var apiData = null;
     var modelError = null;
     try {
-      apiData = await callModel({ system: SYSTEM_PROMPT_HEADER, prompt: userMessage, maxTokens: 4096 });
+      apiData = await callModel({
+        system: SYSTEM_PROMPT_HEADER,
+        prompt: userMessage,
+        maxTokens: 3000,
+        reasoningEffort: 'low'
+      });
     } catch (fetchErr) {
       modelError = fetchErr;
       console.error('Reanalysis model call failed:', fetchErr.message);

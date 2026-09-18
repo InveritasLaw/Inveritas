@@ -8,8 +8,10 @@ function textFromOpenAI(body) {
     .filter(item => item.type === 'output_text').map(item => item.text || '').join('');
 }
 
-async function requestProvider(provider, { system, prompt, maxTokens, reasoningEffort }) {
-  const model = modelFor(provider);
+async function requestProvider(provider, { system, prompt, maxTokens, reasoningEffort, modelOverride }) {
+  const model = modelOverride || modelFor(provider);
+  if (provider === 'openai' && !/^gpt-[a-z0-9.-]+$/.test(model)) throw new Error('OpenAI model override is invalid');
+  if (provider === 'anthropic' && !/^claude-[a-z0-9-]+$/.test(model)) throw new Error('Anthropic model override is invalid');
   const configuredTimeout = Number.parseInt(process.env.AI_REQUEST_TIMEOUT_MS || '45000', 10);
   const timeoutMs = Number.isFinite(configuredTimeout)
     ? Math.min(Math.max(configuredTimeout, 5000), 50000)

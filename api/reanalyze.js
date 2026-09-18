@@ -190,7 +190,8 @@ module.exports = async function handler(req, res) {
         system: SYSTEM_PROMPT_HEADER,
         prompt: userMessage,
         maxTokens: 3000,
-        reasoningEffort: 'low'
+        reasoningEffort: 'low',
+        modelOverride: process.env.OPENAI_REANALYSIS_MODEL || 'gpt-5.6-terra'
       });
     } catch (fetchErr) {
       modelError = fetchErr;

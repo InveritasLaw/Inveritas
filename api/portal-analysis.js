@@ -8,7 +8,8 @@ module.exports = async function handler(req, res) {
   const secret = process.env.COURT_PORTAL_READ_TOKEN;
   const caseId = process.env.COURT_PORTAL_CASE_ID;
   const ownerId = process.env.COURT_PORTAL_OWNER_ID;
-  if (!secret || secret.length < 40 || !caseId || !ownerId) {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!secret || secret.length < 40 || !uuid.test(caseId || '') || !uuid.test(ownerId || '')) {
     return res.status(503).json({ error: 'Case connection is not configured' });
   }
   const supplied = String(req.headers.authorization || '').replace(/^Bearer /, '');
